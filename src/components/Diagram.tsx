@@ -582,6 +582,43 @@ const Diagram: React.FC = () => {
                     color: #f59e0b;
                 }
 
+                /* Logout button */
+                .logout-button {
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    width: 40px;
+                    height: 40px;
+                    border: none;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.9);
+                    color: #374151;
+                    font-size: 18px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    z-index: 200;
+                    transition: all 0.3s ease;
+                }
+
+                .logout-button:hover {
+                    background: rgba(255, 255, 255, 1);
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                }
+
+                .dark-theme .logout-button {
+                    background: rgba(55, 65, 81, 0.9);
+                    color: #d1d5db;
+                }
+
+                .dark-theme .logout-button:hover {
+                    background: rgba(55, 65, 81, 1);
+                }
+
                 /* Sidebar styles */
                 .sidebar {
                     position: fixed;
@@ -847,6 +884,14 @@ const Diagram: React.FC = () => {
                 <div className="theme-icon">
                     {isDarkTheme ? '☀️' : '🌙'}
                 </div>
+            </button>
+
+            <button
+                className="logout-button"
+                onClick={() => window.location.href = '/login'}
+                title="Logout"
+            >
+                ←
             </button>
 
             {/* Sidebar for Node Details */}
