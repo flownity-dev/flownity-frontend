@@ -14,14 +14,43 @@ import {
     ListItem,
     ListItemText,
     Divider,
+    Slide,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import Nav from './Nav';
+import { useNavigate } from 'react-router-dom';
+import type { TransitionProps } from "@mui/material/transitions";
+
+// Slide for Create Project (existing)
+const Transition = React.forwardRef(function Transition(
+    props: TransitionProps & { children: React.ReactElement },
+    ref: React.Ref<unknown>,
+) {
+    return <Slide direction="right" ref={ref} {...props} />;
+});
+
+// Slide from left (for Open Project and Task dialogs)
+const SlideLeft = React.forwardRef(function SlideLeft(
+    props: TransitionProps & { children: React.ReactElement },
+    ref: React.Ref<unknown>,
+) {
+    return <Slide direction="right" ref={ref} {...props} />; // slides in from left
+});
 
 const HomePage: React.FC = () => {
+    const navigate = useNavigate();
+
     const [openDialog, setOpenDialog] = React.useState(false);
     const [projectTitle, setProjectTitle] = React.useState('');
     const [projectDescription, setProjectDescription] = React.useState('');
+
+    // Project dialog states
+    const [openProjectDialog, setOpenProjectDialog] = React.useState(false);
+    const [selectedProject, setSelectedProject] = React.useState<null | { id: number; title: string; description: string }>(null);
+
+    // Task dialog states
+    const [openTaskDialog, setOpenTaskDialog] = React.useState(false);
+    const [selectedTask, setSelectedTask] = React.useState<null | { id: number; task: string; dueDate: string }>(null);
 
     // Static project list
     const projects = [
@@ -31,22 +60,43 @@ const HomePage: React.FC = () => {
     const [dueFrom, setDueFrom] = React.useState('');
     const [dueTo, setDueTo] = React.useState('');
 
-
-    // Static overdue tasks
+    // Static tasks
     const Tasks = [
         { id: 1, task: 'Finish UI for Project 1', dueDate: '2025-08-15' },
         { id: 2, task: 'Prepare debate material', dueDate: '2025-08-17' },
     ];
 
+    // Create Project handlers
     const handleOpenDialog = () => setOpenDialog(true);
     const handleCloseDialog = () => setOpenDialog(false);
-
     const handleCreateProject = () => {
         console.log('New Project:', { projectTitle, projectDescription });
-        // TODO: integrate with backend or state management
         handleCloseDialog();
         setProjectTitle('');
         setProjectDescription('');
+    };
+
+    // Project handlers
+    const handleOpenProject = (project: { id: number; title: string; description: string }) => {
+        setSelectedProject(project);
+        setOpenProjectDialog(true);
+    };
+    const handleCloseProjectDialog = () => {
+        setSelectedProject(null);
+        setOpenProjectDialog(false);
+    };
+    const handleOpenWorkspace = () => {
+        if (selectedProject) navigate(`/workspace/${selectedProject.id}`);
+    };
+
+    // Task handlers
+    const handleOpenTask = (task: { id: number; task: string; dueDate: string }) => {
+        setSelectedTask(task);
+        setOpenTaskDialog(true);
+    };
+    const handleCloseTaskDialog = () => {
+        setSelectedTask(null);
+        setOpenTaskDialog(false);
     };
 
     return (
@@ -81,7 +131,7 @@ const HomePage: React.FC = () => {
                                     + Create Project
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Start a new debate or visual discussion
+                                    Start a new project
                                 </Typography>
                             </Paper>
                         </Grid>
@@ -112,6 +162,7 @@ const HomePage: React.FC = () => {
                                             size="small"
                                             variant="contained"
                                             color="primary"
+                                            onClick={() => handleOpenProject(project)}
                                         >
                                             Open
                                         </Button>
@@ -122,7 +173,7 @@ const HomePage: React.FC = () => {
                     </Grid>
                 </Box>
 
-                {/* Overdue Tasks List */}
+                {/* Tasks List */}
                 <Box mb={8}>
                     <Typography variant="h5" fontWeight={600} gutterBottom>
                         Tasks
@@ -134,7 +185,12 @@ const HomePage: React.FC = () => {
                                 <React.Fragment key={task.id}>
                                     <ListItem
                                         secondaryAction={
-                                            <Button size="small" variant="outlined" color="error">
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                color="error"
+                                                onClick={() => handleOpenTask(task)}
+                                            >
                                                 View
                                             </Button>
                                         }
@@ -151,8 +207,14 @@ const HomePage: React.FC = () => {
                     </Paper>
                 </Box>
 
-                {/* Dialog Form */}
-                <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+                {/* Create Project Dialog */}
+                <Dialog
+                    open={openDialog}
+                    onClose={handleCloseDialog}
+                    fullWidth
+                    maxWidth="sm"
+                    TransitionComponent={Transition}
+                >
                     <DialogTitle>Create New Project</DialogTitle>
                     <DialogContent dividers>
                         <TextField
@@ -193,6 +255,59 @@ const HomePage: React.FC = () => {
                     <DialogActions>
                         <Button onClick={handleCloseDialog}>Cancel</Button>
                         <Button variant="contained" onClick={handleCreateProject}>Create</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Open Project Dialog */}
+                <Dialog
+                    open={openProjectDialog}
+                    onClose={handleCloseProjectDialog}
+                    fullWidth
+                    maxWidth="sm"
+                    TransitionComponent={SlideLeft}
+                    keepMounted
+                >
+                    <DialogTitle>{selectedProject?.title}</DialogTitle>
+                    <DialogContent dividers>
+                        <Typography variant="body1" gutterBottom>
+                            {selectedProject?.description}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            More details about the project can be shown here.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseProjectDialog} color="secondary">
+                            Close
+                        </Button>
+                        <Button variant="contained" color="primary" onClick={handleOpenWorkspace}>
+                            Open in Workspace
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Task Dialog */}
+                <Dialog
+                    open={openTaskDialog}
+                    onClose={handleCloseTaskDialog}
+                    fullWidth
+                    maxWidth="sm"
+                    TransitionComponent={SlideLeft}
+                    keepMounted
+                >
+                    <DialogTitle>{selectedTask?.task}</DialogTitle>
+                    <DialogContent dividers>
+                        <Typography variant="body1" gutterBottom>
+                            Due Date: {selectedTask?.dueDate}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Additional task details can be shown here.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseTaskDialog} color="secondary">
+                            Close
+                        </Button>
                     </DialogActions>
                 </Dialog>
             </Container>
