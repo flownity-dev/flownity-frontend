@@ -23,6 +23,8 @@ import dagre from "dagre";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from '../theme/ThemeProvider';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 
 type Task = { id: string; label: string; status: string };
 type User = { id: string; label: string; tasks: Task[]; approver?: string };
@@ -85,10 +87,12 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 };
 
 const Diagram: React.FC = () => {
+    const { mode, toggleTheme } = useTheme();
+    const muiTheme = useMuiTheme();
     const [openUser, setOpenUser] = useState<User | null>(null);
     const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
     const [layoutedEdges, setLayoutedEdges] = useState<Edge[]>([]);
-    const [darkMode, setDarkMode] = useState(false);
+    const darkMode = mode === 'dark';
 
     useEffect(() => {
         const nodes: Node[] = users.map((user) => {
@@ -102,16 +106,14 @@ const Diagram: React.FC = () => {
                 position: { x: 0, y: 0 },
                 style: {
                     backgroundColor: allCompleted
-                        ? "lightgreen"
+                        ? muiTheme.palette.success.main
                         : inProgress
-                        ? "lightpink"
-                        : darkMode
-                        ? "#333"
-                        : "#fff",
-                    color: darkMode ? "#fff" : "#000",
+                        ? muiTheme.palette.warning.main
+                        : muiTheme.palette.background.paper,
+                    color: muiTheme.palette.text.primary,
                     padding: 10,
-                    border: "1px solid #777",
-                    borderRadius: 5,
+                    border: `1px solid ${muiTheme.palette.divider}`,
+                    borderRadius: muiTheme.shape.borderRadius,
                 },
             };
         });
@@ -129,12 +131,10 @@ const Diagram: React.FC = () => {
                     animated: inProgress,
                     style: {
                         stroke: allCompleted
-                            ? "green"
+                            ? muiTheme.palette.success.main
                             : inProgress
-                            ? "orange"
-                            : darkMode
-                            ? "#aaa"
-                            : "#555",
+                            ? muiTheme.palette.warning.main
+                            : muiTheme.palette.text.secondary,
                         strokeDasharray: inProgress ? "5,5" : undefined,
                     },
                     type: "smoothstep",
@@ -169,27 +169,27 @@ const Diagram: React.FC = () => {
             style={{
                 width: "100%",
                 height: "100vh",
-                background: darkMode ? "#121212" : "#f5f5f5",
+                background: muiTheme.palette.background.default,
                 transition: "background 0.3s",
             }}
         >
             <ReactFlowProvider>
             <Box position="absolute" top={10} right={10} zIndex={10} display="flex" alignItems="center">
-    <Tooltip title="Toggle Dark/Light Mode">
+    <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
         <IconButton
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleTheme}
             sx={{
-                bgcolor: darkMode ? "#333" : "#fff",
-                color: darkMode ? "#fff" : "#000",
+                bgcolor: muiTheme.palette.background.paper,
+                color: muiTheme.palette.text.primary,
                 border: "1px solid",
-                borderColor: darkMode ? "#555" : "#ccc",
+                borderColor: muiTheme.palette.divider,
                 "&:hover": {
-                    bgcolor: darkMode ? "#444" : "#f0f0f0",
+                    bgcolor: muiTheme.palette.action.hover,
                 },
                 transition: "all 0.3s",
             }}
         >
-            {darkMode ? <DarkModeIcon /> : <LightModeIcon />}
+            {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
         </IconButton>
     </Tooltip>
 </Box>
@@ -207,7 +207,7 @@ const Diagram: React.FC = () => {
                     zoomOnPinch={false}
                     zoomOnDoubleClick={false}
                 >
-                    <Background color={darkMode ? "#555" : "#aaa"} gap={16} />
+                    <Background color={muiTheme.palette.divider} gap={16} />
                     <Controls />
                     <MiniMap
                         nodeColor={(node) => node.style?.backgroundColor as string}
@@ -222,8 +222,8 @@ const Diagram: React.FC = () => {
     maxWidth="xs"
     PaperProps={{
         sx: {
-            bgcolor: darkMode ? "#1e1e1e" : "#fff",
-            color: darkMode ? "#fff" : "#000",
+            bgcolor: muiTheme.palette.background.paper,
+            color: muiTheme.palette.text.primary,
             borderRadius: 3,
         },
     }}
@@ -232,7 +232,7 @@ const Diagram: React.FC = () => {
     <Box display="flex" alignItems="center" justifyContent="space-between" px={2} pt={2}>
         <DialogTitle sx={{ p: 0 }}>{openUser?.label}'s Tasks</DialogTitle>
         <IconButton onClick={() => setOpenUser(null)}>
-            <CloseIcon sx={{ color: darkMode ? "#fff" : "#000" }} />
+            <CloseIcon sx={{ color: muiTheme.palette.text.primary }} />
         </IconButton>
     </Box>
 
@@ -253,11 +253,11 @@ const Diagram: React.FC = () => {
                         alignItems: "center",
                         bgcolor:
                             task.status === "completed"
-                                ? "rgba(76, 175, 80, 0.1)"
+                                ? `${muiTheme.palette.success.main}20`
                                 : task.status === "in-progress"
-                                ? "rgba(255, 193, 7, 0.1)"
-                                : "rgba(158, 158, 158, 0.1)",
-                        color: darkMode ? "#fff" : "#000",
+                                ? `${muiTheme.palette.warning.main}20`
+                                : `${muiTheme.palette.action.disabled}20`,
+                        color: muiTheme.palette.text.primary,
                         transition: "all 0.3s",
                     }}
                 >

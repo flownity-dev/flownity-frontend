@@ -6,18 +6,23 @@
 - **TypeScript 5.9.2** for type safety
 
 ## Key Libraries
-- **Rete.js 2.0.6** - Core node editor framework
-- **rete-area-plugin** - Viewport and area management
-- **rete-connection-plugin** - Node connections and flow
-- **rete-react-plugin** - React integration for Rete
-- **rete-auto-arrange-plugin** - Automatic node layout
-- **styled-components 6.1.19** - CSS-in-JS styling
-- **elkjs 0.10.0** - Graph layout algorithms
+- **Material-UI (MUI) 7.3.1** - Primary UI component library
+  - `@mui/material` - Core components
+  - `@mui/icons-material` - Icon library
+  - `@mui/x-date-pickers` - Date picker components
+- **React Router DOM 7.8.1** - Client-side routing
+- **ReactFlow 11.11.4** - Interactive node-based diagrams and flowcharts
+- **Emotion 11.14.0** - CSS-in-JS styling (MUI dependency)
+- **styled-components 6.1.19** - Additional CSS-in-JS styling
+- **Dagre 0.8.5** - Graph layout algorithms for automatic node positioning
+- **Day.js 1.11.13** - Date manipulation library
+- **web-worker 1.5.0** - Web Worker utilities
 
 ## Development Tools
 - **ESLint 9.33.0** with TypeScript, React, and Prettier integration
 - **Prettier 3.6.2** for code formatting
 - **@vitejs/plugin-react** for React support in Vite
+- **typescript-eslint 8.39.1** - TypeScript-specific ESLint rules
 
 ## Common Commands
 

@@ -16,9 +16,12 @@ flownity-frontend/
 ```
 src/
 ├── components/             # React components
-│   └── Diagram.tsx        # Main diagram editor component
+│   ├── Diagram.tsx        # ReactFlow-based diagram editor
+│   ├── Homepage.tsx       # Main dashboard with projects and tasks
+│   ├── Login.tsx          # Authentication page
+│   └── Nav.tsx            # Navigation bar component
 ├── assets/                 # Static assets (images, icons)
-├── App.tsx                # Root application component
+├── App.tsx                # Root application component with routing
 ├── main.tsx               # Application entry point
 ├── App.css                # Application styles
 ├── index.css              # Global styles
@@ -34,22 +37,32 @@ src/
 - `eslint.config.js` - ESLint rules and plugins
 
 ## Component Architecture
-- **App.tsx** - Root component with full viewport layout
-- **Diagram.tsx** - Main feature component containing:
-  - Rete.js editor initialization
-  - Node creation and management
-  - UI controls (zoom, theme toggle, sidebar)
-  - Event handling and state management
+- **App.tsx** - Root component with Material-UI theming and React Router
+- **Homepage.tsx** - Dashboard with project management and task overview
+- **Login.tsx** - OAuth-style authentication with GitHub/Google integration
+- **Nav.tsx** - Responsive navigation bar using Material-UI AppBar
+- **Diagram.tsx** - Interactive flow diagram using ReactFlow with:
+  - User task visualization
+  - Automatic layout with Dagre
+  - Dark/light theme toggle
+  - Node interaction and details modal
+
+## Routing Structure
+- `/` - Homepage (dashboard)
+- `/login` - Authentication page
+- `/diagram` - Interactive flow diagram
+- Catch-all redirect to homepage
 
 ## Styling Approach
-- Inline styles for layout and positioning
-- CSS-in-JS with styled-components for complex styling
+- Material-UI components for consistent design system
+- Emotion CSS-in-JS (MUI dependency) for component styling
+- styled-components for additional custom styling
 - Global CSS files for base styles
-- Theme-aware styling with dark/light mode support
+- Theme-aware styling with MUI ThemeProvider
 
 ## Key Patterns
-- Single-page application structure
-- Component-based architecture
+- Multi-page application with React Router
+- Component-based architecture with Material-UI
 - TypeScript for type safety
 - React hooks for state management
-- Plugin-based architecture with Rete.js
+- Responsive design with Material-UI Grid system

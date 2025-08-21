@@ -7,13 +7,13 @@ import {
   Typography,
   Button,
   Stack,
-  Divider,
-  useTheme
+  Divider
 } from '@mui/material';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 import { GitHub, Google } from '@mui/icons-material';
 
 const Login: React.FC = () => {
-  const theme = useTheme();
+  const theme = useMuiTheme();
   const navigate = useNavigate();
 
   const handleGitHubLogin = () => {
@@ -39,7 +39,7 @@ const Login: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

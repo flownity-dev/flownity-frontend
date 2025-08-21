@@ -123,7 +123,7 @@ const HomePage: React.FC = () => {
                                     minHeight: 180,
                                     textAlign: 'center',
                                     cursor: 'pointer',
-                                    backgroundColor: '#f5f5f5',
+                                    backgroundColor: 'action.hover',
                                 }}
                                 onClick={handleOpenDialog}
                             >
