@@ -17,7 +17,6 @@ import {
     Slide,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import Nav from './Nav';
 import { useNavigate } from 'react-router-dom';
 import type { TransitionProps } from "@mui/material/transitions";
 
@@ -101,7 +100,6 @@ const HomePage: React.FC = () => {
 
     return (
         <>
-            <Nav />
             <Container maxWidth="lg" sx={{ mt: 4 }}>
                 {/* Project List */}
                 <Box mb={8}>

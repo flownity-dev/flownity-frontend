@@ -20,8 +20,6 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import dagre from "dagre";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
 import Tooltip from "@mui/material/Tooltip";
 import { useTheme } from '../theme/ThemeProvider';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
@@ -189,7 +187,6 @@ const Diagram: React.FC = () => {
                 transition: "all 0.3s",
             }}
         >
-            {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
         </IconButton>
     </Tooltip>
 </Box>
