@@ -41,3 +41,68 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Sidebar responsive styles */
+.sidebar {
+  transition: width 300ms ease-in-out, transform 300ms ease-in-out;
+}
+
+.sidebar--mobile {
+  position: fixed !important;
+  z-index: 1300;
+}
+
+.sidebar--collapsed.sidebar--mobile {
+  transform: translateX(-100%);
+}
+
+.sidebar--expanded.sidebar--mobile {
+  transform: translateX(0);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Touch-friendly interactions */
+@media (max-width: 768px) {
+  .sidebar-nav-item {
+    min-height: 56px !important;
+  }
+  
+  .sidebar-nav-item .MuiListItemIcon-root {
+    min-width: 56px !important;
+  }
+  
+  .sidebar-nav-item .MuiSvgIcon-root {
+    font-size: 1.5rem !important;
+  }
+  
+  .sidebar-nav-item .MuiListItemText-primary {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* Prevent text selection when mobile sidebar is open */
+.mobile-sidebar-open {
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Smooth transitions for responsive breakpoint changes */
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar,
+  .sidebar .MuiDrawer-paper {
+    transition: width 300ms ease-in-out, transform 300ms ease-in-out, margin-left 300ms ease-in-out;
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar .MuiDrawer-paper,
+  .sidebar-nav-item,
+  .sidebar-brand-collapsed,
+  .sidebar-brand-expanded {
+    transition: none !important;
+    animation: none !important;
+  }
+}
