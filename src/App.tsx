@@ -7,6 +7,7 @@ import { Sidebar } from './components/Sidebar';
 import Diagram from './components/Diagram';
 import Login from './components/Login';
 import HomePage from './components/Homepage';
+import { Projects } from './components/Projects';
 
 // Main layout component that uses sidebar context - for authenticated routes only
 function MainLayout() {
@@ -69,7 +70,7 @@ function MainLayout() {
             </div>
           } />
           <Route path="/" element={<HomePage />} />
-          <Route path="/projects" element={<HomePage />} />
+          <Route path="/projects" element={<Projects />} />
           <Route path="/task-groups" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -95,3 +95,67 @@ export interface SidebarFooterProps {
   userProfile: UserProfile;
   isCollapsed: boolean;
 }
+
+/**
+ * Project status type union for all possible project states
+ */
+export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'archived';
+
+/**
+ * Project interface for project data structure
+ */
+export interface Project {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  status: ProjectStatus;
+}
+
+/**
+ * Projects component props interface
+ */
+export interface ProjectsProps {
+  // No props needed - self-contained component
+  className?: string;
+}
+
+/**
+ * Projects header component props interface
+ */
+export interface ProjectsHeaderProps {
+  // No props needed - displays static title
+  className?: string;
+}
+
+/**
+ * Projects filters component props interface
+ */
+export interface ProjectsFiltersProps {
+  activeFilter: 'all' | 'archived';
+  onFilterChange: (filter: 'all' | 'archived') => void;
+  onNewProject: () => void;
+  isMobile?: boolean;
+}
+
+/**
+ * Projects table component props interface
+ */
+export interface ProjectsTableProps {
+  projects: Project[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  isMobile?: boolean;
+  isTablet?: boolean;
+}
+
+/**
+ * Projects pagination component props interface
+ */
+export interface ProjectsPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  isMobile?: boolean;
+}
