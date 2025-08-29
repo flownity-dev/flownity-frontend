@@ -159,3 +159,43 @@ export interface ProjectsPaginationProps {
   onPageChange: (page: number) => void;
   isMobile?: boolean;
 }
+
+/**
+ * Priority type for project creation
+ */
+export type ProjectPriority = 'low' | 'medium' | 'high';
+
+/**
+ * Priority option interface for select dropdown
+ */
+export interface PriorityOption {
+  value: ProjectPriority;
+  label: string;
+}
+
+/**
+ * Form data interface for creating new projects
+ */
+export interface CreateProjectFormData {
+  name: string;
+  description?: string;
+  priority: ProjectPriority;
+}
+
+/**
+ * Create project modal component props interface
+ */
+export interface CreateProjectModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (projectData: CreateProjectFormData) => void;
+}
+
+/**
+ * Priority options constants for project creation dropdown
+ */
+export const PRIORITY_OPTIONS: PriorityOption[] = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' }
+];

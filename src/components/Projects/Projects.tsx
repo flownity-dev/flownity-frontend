@@ -4,8 +4,9 @@ import ProjectsHeader from './ProjectsHeader';
 import ProjectsFilters from './ProjectsFilters';
 import ProjectsTable from './ProjectsTable';
 import ProjectsPagination from './ProjectsPagination';
+import CreateProjectModal from './CreateProjectModal';
 import { sampleProjects } from './sampleData';
-import type { Project } from '../../types/common.types';
+import type { Project, CreateProjectFormData } from '../../types/common.types';
 
 const Projects: React.FC = () => {
   const theme = useTheme();
@@ -18,6 +19,9 @@ const Projects: React.FC = () => {
   const [projects] = useState<Project[]>(sampleProjects);
   const [loading] = useState<boolean>(false);
   const [error] = useState<string | null>(null);
+
+  // Modal state management
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   // Items per page for pagination - responsive
   const itemsPerPage = isMobile ? 5 : 10;
@@ -42,8 +46,16 @@ const Projects: React.FC = () => {
   };
 
   const handleNewProject = () => {
-    // This will be implemented in future tasks
-    console.log('New project functionality will be implemented in future tasks');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleCreateProject = (projectData: CreateProjectFormData) => {
+    console.log('Creating project:', projectData);
+    handleCloseCreateModal();
   };
 
   const handlePageChange = (page: number) => {
@@ -56,9 +68,9 @@ const Projects: React.FC = () => {
   };
 
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{ 
+    <Container
+      maxWidth="lg"
+      sx={{
         mt: { xs: 2, sm: 3, md: 4 },
         px: { xs: 2, sm: 3 },
         pb: { xs: 2, sm: 3, md: 4 },
@@ -100,6 +112,13 @@ const Projects: React.FC = () => {
           isMobile={isMobile}
         />
       </Box>
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        open={isCreateModalOpen}
+        onClose={handleCloseCreateModal}
+        onSubmit={handleCreateProject}
+      />
     </Container>
   );
 };
