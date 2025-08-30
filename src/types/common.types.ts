@@ -113,6 +113,67 @@ export interface Project {
 }
 
 /**
+ * Extended project interface for detailed project view
+ */
+export interface ProjectDetailData {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  startDate: Date;
+  endDate: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  owner?: string;
+}
+
+/**
+ * Tab type for project detail navigation
+ */
+export type ProjectDetailTab = 'task-groups' | 'members';
+
+/**
+ * Props interface for ProjectDetailHeader component
+ */
+export interface ProjectDetailHeaderProps {
+  project: ProjectDetailData;
+  onToggleSidebar: () => void;
+  isSidebarCollapsed: boolean;
+}
+
+/**
+ * Props interface for ProjectDetailTabs component
+ */
+export interface ProjectDetailTabsProps {
+  activeTab: ProjectDetailTab;
+  onTabChange: (tab: ProjectDetailTab) => void;
+}
+
+/**
+ * Props interface for ProjectDetailContent component
+ */
+export interface ProjectDetailContentProps {
+  activeTab: ProjectDetailTab;
+  project: ProjectDetailData;
+}
+
+/**
+ * Props interface for ProjectDetailSidebar component
+ */
+export interface ProjectDetailSidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  project: ProjectDetailData;
+}
+
+/**
+ * Props interface for main ProjectDetailView component
+ */
+export interface ProjectDetailViewProps {
+  className?: string;
+}
+
+/**
  * Projects component props interface
  */
 export interface ProjectsProps {
