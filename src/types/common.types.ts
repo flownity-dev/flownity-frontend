@@ -260,3 +260,71 @@ export const PRIORITY_OPTIONS: PriorityOption[] = [
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' }
 ];
+
+/**
+ * Task group status type union for all possible task group states
+ */
+export type TaskGroupStatus = 'active' | 'archived';
+
+/**
+ * Task group interface for task group data structure
+ */
+export interface TaskGroup {
+  id: string;
+  name: string;
+  projectId: string;
+  projectName: string;
+  taskCount: number;
+  status: TaskGroupStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Form data interface for creating new task groups
+ */
+export interface CreateTaskGroupFormData {
+  name: string;
+  description?: string;
+}
+
+/**
+ * Task groups filters component props interface
+ */
+export interface TaskGroupsFiltersProps {
+  activeFilter: 'all' | 'archived';
+  onFilterChange: (filter: 'all' | 'archived') => void;
+  onNewTaskGroup: () => void;
+  isMobile?: boolean;
+}
+
+/**
+ * Task groups table component props interface
+ */
+export interface TaskGroupsTableProps {
+  taskGroups: TaskGroup[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  isMobile?: boolean;
+  isTablet?: boolean;
+}
+
+/**
+ * Task groups pagination component props interface
+ */
+export interface TaskGroupsPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  isMobile?: boolean;
+}
+
+/**
+ * Create task group modal component props interface
+ */
+export interface CreateTaskGroupModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (taskGroupData: CreateTaskGroupFormData) => void;
+}

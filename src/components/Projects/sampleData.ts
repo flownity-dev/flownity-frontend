@@ -2,7 +2,7 @@ import type { Project, ProjectDetailData } from '../../types/common.types';
 
 /**
  * Sample project data for initial development
- * Contains 2 sample rows covering different statuses and filter scenarios
+ * Contains multiple sample rows covering different statuses and filter scenarios
  */
 export const sampleProjects: Project[] = [
   {
@@ -17,6 +17,48 @@ export const sampleProjects: Project[] = [
     name: 'Legacy System Upgrade',
     startDate: new Date('2023-08-01'),
     endDate: new Date('2023-12-15'),
+    status: 'archived'
+  },
+  {
+    id: '3',
+    name: 'Mobile App Development',
+    startDate: new Date('2024-03-01'),
+    endDate: new Date('2024-08-15'),
+    status: 'active'
+  },
+  {
+    id: '4',
+    name: 'API Modernization',
+    startDate: new Date('2024-02-01'),
+    endDate: new Date('2024-06-30'),
+    status: 'active'
+  },
+  {
+    id: '5',
+    name: 'Database Migration',
+    startDate: new Date('2023-09-15'),
+    endDate: new Date('2024-01-20'),
+    status: 'completed'
+  },
+  {
+    id: '6',
+    name: 'Security Audit',
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2024-03-15'),
+    status: 'on-hold'
+  },
+  {
+    id: '7',
+    name: 'Performance Optimization',
+    startDate: new Date('2024-04-01'),
+    endDate: new Date('2024-07-30'),
+    status: 'active'
+  },
+  {
+    id: '8',
+    name: 'User Training Program',
+    startDate: new Date('2023-10-01'),
+    endDate: new Date('2023-12-31'),
     status: 'archived'
   }
 ];
