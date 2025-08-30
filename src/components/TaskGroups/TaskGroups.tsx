@@ -1,22 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import { Container, Box, useTheme, useMediaQuery } from '@mui/material';
-import ProjectsHeader from './ProjectsHeader';
-import ProjectsFilters from './ProjectsFilters';
-import ProjectsTable from './ProjectsTable';
-import ProjectsPagination from './ProjectsPagination';
-import CreateProjectModal from './CreateProjectModal';
-import { sampleProjects } from './sampleData';
-import type { Project, CreateProjectFormData } from '../../types/common.types';
+import TaskGroupsHeader from './TaskGroupsHeader';
+import TaskGroupsFilters from './TaskGroupsFilters';
+import TaskGroupsTable from './TaskGroupsTable';
+import TaskGroupsPagination from './TaskGroupsPagination';
+import CreateTaskGroupModal from './CreateTaskGroupModal';
+import { sampleTaskGroups } from './sampleData';
+import type { TaskGroup, CreateTaskGroupFormData } from '../../types/common.types';
 
-const Projects: React.FC = () => {
+const TaskGroups: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
-  // State management for active filter, current page, and projects data
+  // State management for active filter, current page, and task groups data
   const [activeFilter, setActiveFilter] = useState<'all' | 'archived'>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [projects] = useState<Project[]>(sampleProjects);
+  const [taskGroups] = useState<TaskGroup[]>(sampleTaskGroups);
   const [loading] = useState<boolean>(false);
   const [error] = useState<string | null>(null);
 
@@ -26,18 +26,18 @@ const Projects: React.FC = () => {
   // Items per page for pagination - responsive
   const itemsPerPage = isMobile ? 3 : 5;
 
-  // Filter projects based on active filter
-  const filteredProjects = useMemo(() => {
+  // Filter task groups based on active filter
+  const filteredTaskGroups = useMemo(() => {
     if (activeFilter === 'archived') {
-      return projects.filter(project => project.status === 'archived');
+      return taskGroups.filter(taskGroup => taskGroup.status === 'archived');
     }
-    return projects; // 'all' filter shows all projects
-  }, [projects, activeFilter]);
+    return taskGroups.filter(taskGroup => taskGroup.status === 'active'); // 'all' filter shows active task groups
+  }, [taskGroups, activeFilter]);
 
   // Calculate pagination values
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredTaskGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProjects = filteredProjects.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedTaskGroups = filteredTaskGroups.slice(startIndex, startIndex + itemsPerPage);
 
   // Handler functions
   const handleFilterChange = (filter: 'all' | 'archived') => {
@@ -45,7 +45,7 @@ const Projects: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filter changes
   };
 
-  const handleNewProject = () => {
+  const handleNewTaskGroup = () => {
     setIsCreateModalOpen(true);
   };
 
@@ -53,8 +53,8 @@ const Projects: React.FC = () => {
     setIsCreateModalOpen(false);
   };
 
-  const handleCreateProject = (projectData: CreateProjectFormData) => {
-    console.log('Creating project:', projectData);
+  const handleCreateTaskGroup = (taskGroupData: CreateTaskGroupFormData) => {
+    console.log('Creating task group:', taskGroupData);
     handleCloseCreateModal();
   };
 
@@ -76,25 +76,25 @@ const Projects: React.FC = () => {
         pb: { xs: 2, sm: 3, md: 4 },
       }}
     >
-      {/* Projects Header */}
+      {/* Task Groups Header */}
       <Box mb={{ xs: 2, sm: 3 }}>
-        <ProjectsHeader />
+        <TaskGroupsHeader />
       </Box>
 
-      {/* Projects Filters */}
+      {/* Task Groups Filters */}
       <Box mb={{ xs: 2, sm: 3 }}>
-        <ProjectsFilters
+        <TaskGroupsFilters
           activeFilter={activeFilter}
           onFilterChange={handleFilterChange}
-          onNewProject={handleNewProject}
+          onNewTaskGroup={handleNewTaskGroup}
           isMobile={isMobile}
         />
       </Box>
 
-      {/* Projects Table */}
+      {/* Task Groups Table */}
       <Box mb={2}>
-        <ProjectsTable
-          projects={paginatedProjects}
+        <TaskGroupsTable
+          taskGroups={paginatedTaskGroups}
           loading={loading}
           error={error}
           onRetry={handleRetry}
@@ -103,9 +103,9 @@ const Projects: React.FC = () => {
         />
       </Box>
 
-      {/* Projects Pagination */}
+      {/* Task Groups Pagination */}
       <Box>
-        <ProjectsPagination
+        <TaskGroupsPagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={handlePageChange}
@@ -113,14 +113,14 @@ const Projects: React.FC = () => {
         />
       </Box>
 
-      {/* Create Project Modal */}
-      <CreateProjectModal
+      {/* Create Task Group Modal */}
+      <CreateTaskGroupModal
         open={isCreateModalOpen}
         onClose={handleCloseCreateModal}
-        onSubmit={handleCreateProject}
+        onSubmit={handleCreateTaskGroup}
       />
     </Container>
   );
 };
 
-export default Projects;
+export default TaskGroups;

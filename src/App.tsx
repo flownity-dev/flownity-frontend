@@ -10,6 +10,7 @@ import Login from './components/Login';
 import HomePage from './components/Homepage';
 import { Projects } from './components/Projects';
 import { ProjectDetailView } from './components/Projects/ProjectDetailView';
+import { TaskGroups } from './components/TaskGroups';
 
 // Main layout component that uses sidebar context - for authenticated routes only
 function MainLayout() {
@@ -89,7 +90,7 @@ function MainLayout() {
               <ProjectDetailView />
             </ErrorBoundary>
           } />
-          <Route path="/task-groups" element={<HomePage />} />
+          <Route path="/task-groups" element={<TaskGroups />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>
