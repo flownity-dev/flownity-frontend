@@ -31,7 +31,7 @@ const defaultNavigationItems: NavigationItem[] = [
         id: 'projects',
         label: 'Projects',
         icon: FolderIcon,
-        path: '/projects',
+        path: '/project',
     },
     {
         id: 'task-groups',
@@ -90,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     // Mobile overlay backdrop
     const MobileBackdrop = () => {
         if (!isMobile || isCollapsed) return null;
-        
+
         return (
             <Backdrop
                 open={!isCollapsed}
@@ -194,48 +194,48 @@ const Sidebar: React.FC<SidebarProps> = ({
                     keepMounted: true, // Better mobile performance
                 }}
             >
-            {/* Sidebar Header */}
-            <SidebarHeader
-                isCollapsed={isCollapsed}
-                onToggle={toggleSidebar}
-            />
+                {/* Sidebar Header */}
+                <SidebarHeader
+                    isCollapsed={isCollapsed}
+                    onToggle={toggleSidebar}
+                />
 
-            {/* Navigation Items */}
-            <Box
-                component="nav"
-                sx={{
-                    flex: 1,
-                    py: 1,
-                    overflow: 'hidden auto',
-                }}
-                aria-label="Main navigation"
-                role="navigation"
-            >
-                <List
+                {/* Navigation Items */}
+                <Box
+                    component="nav"
                     sx={{
-                        px: 0,
-                        py: 0,
+                        flex: 1,
+                        py: 1,
+                        overflow: 'hidden auto',
                     }}
-                    role="list"
-                    aria-label="Navigation menu items"
+                    aria-label="Main navigation"
+                    role="navigation"
                 >
-                    {navigationItems.map((item) => (
-                        <SidebarNavItem
-                            key={item.id}
-                            item={item}
-                            isCollapsed={isCollapsed}
-                            onClick={handleNavItemClick}
-                        />
-                    ))}
-                </List>
-            </Box>
+                    <List
+                        sx={{
+                            px: 0,
+                            py: 0,
+                        }}
+                        role="list"
+                        aria-label="Navigation menu items"
+                    >
+                        {navigationItems.map((item) => (
+                            <SidebarNavItem
+                                key={item.id}
+                                item={item}
+                                isCollapsed={isCollapsed}
+                                onClick={handleNavItemClick}
+                            />
+                        ))}
+                    </List>
+                </Box>
 
-            {/* Sidebar Footer */}
-            <SidebarFooter
-                userProfile={userProfile}
-                isCollapsed={isCollapsed}
-            />
-        </Drawer>
+                {/* Sidebar Footer */}
+                <SidebarFooter
+                    userProfile={userProfile}
+                    isCollapsed={isCollapsed}
+                />
+            </Drawer>
         </>
     );
 };

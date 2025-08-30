@@ -4,10 +4,12 @@ import './App.css';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 import { Sidebar } from './components/Sidebar';
+import { ErrorBoundary, ErrorState } from './components/Common';
 import Diagram from './components/Diagram';
 import Login from './components/Login';
 import HomePage from './components/Homepage';
 import { Projects } from './components/Projects';
+import { ProjectDetailView } from './components/Projects/ProjectDetailView';
 
 // Main layout component that uses sidebar context - for authenticated routes only
 function MainLayout() {
@@ -70,7 +72,23 @@ function MainLayout() {
             </div>
           } />
           <Route path="/" element={<HomePage />} />
-          <Route path="/projects" element={<Projects />} />
+          <Route path="/project" element={<Projects />} />
+          <Route path="/project/:id" element={
+            <ErrorBoundary
+              fallback={
+                <Box sx={{ p: 4 }}>
+                  <ErrorState
+                    title="Project View Error"
+                    description="Failed to load project detail view. Please try refreshing the page."
+                    onRetry={() => window.location.reload()}
+                    actionLabel="Refresh Page"
+                  />
+                </Box>
+              }
+            >
+              <ProjectDetailView />
+            </ErrorBoundary>
+          } />
           <Route path="/task-groups" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

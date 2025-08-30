@@ -18,7 +18,7 @@ export const navigationItems: NavigationItem[] = [
     id: 'projects',
     label: 'Projects',
     icon: FolderIcon,
-    path: '/projects',
+    path: '/project',
   },
   {
     id: 'task-groups',
