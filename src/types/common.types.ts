@@ -328,3 +328,66 @@ export interface CreateTaskGroupModalProps {
   onClose: () => void;
   onSubmit: (taskGroupData: CreateTaskGroupFormData) => void;
 }
+
+/**
+ * Task status type union for all possible task states
+ */
+export type TaskStatus = 'new' | 'in-progress' | 'completed' | 'close';
+
+/**
+ * Task interface for individual task data structure
+ */
+export interface Task {
+  id: string;
+  name: string;
+  deadlineDate: Date;
+  assignee: string;
+  approver: string;
+  status: TaskStatus;
+  taskGroupId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Extended task group interface for detailed task group view
+ */
+export interface TaskGroupDetailData extends TaskGroup {
+  description: string;
+}
+
+/**
+ * Tasks table component props interface
+ */
+export interface TasksTableProps {
+  tasks: Task[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  isMobile?: boolean;
+  isTablet?: boolean;
+}
+
+/**
+ * Tasks pagination component props interface
+ */
+export interface TasksPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  isMobile?: boolean;
+}
+
+/**
+ * Task group detail header component props interface
+ */
+export interface TaskGroupDetailHeaderProps {
+  taskGroup: TaskGroupDetailData;
+}
+
+/**
+ * Task group detail view component props interface
+ */
+export interface TaskGroupDetailViewProps {
+  className?: string;
+}
