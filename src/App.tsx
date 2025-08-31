@@ -10,7 +10,7 @@ import Login from './components/Login';
 import HomePage from './components/Homepage';
 import { Projects } from './components/Projects';
 import { ProjectDetailView } from './components/Projects/ProjectDetailView';
-import { TaskGroups } from './components/TaskGroups';
+import { TaskGroups, TaskGroupDetailView } from './components/TaskGroups';
 
 // Main layout component that uses sidebar context - for authenticated routes only
 function MainLayout() {
@@ -91,6 +91,22 @@ function MainLayout() {
             </ErrorBoundary>
           } />
           <Route path="/task-groups" element={<TaskGroups />} />
+          <Route path="/task-groups/:id" element={
+            <ErrorBoundary
+              fallback={
+                <Box sx={{ p: 4 }}>
+                  <ErrorState
+                    title="Task Group View Error"
+                    description="Failed to load task group detail view. Please try refreshing the page."
+                    onRetry={() => window.location.reload()}
+                    actionLabel="Refresh Page"
+                  />
+                </Box>
+              }
+            >
+              <TaskGroupDetailView />
+            </ErrorBoundary>
+          } />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>
