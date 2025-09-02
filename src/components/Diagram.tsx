@@ -18,6 +18,10 @@ import {
   ListItemText,
   Chip,
   Box,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 import dagre from "dagre";
 
@@ -85,8 +89,12 @@ dagreGraph.setDefaultEdgeLabel(() => ({}));
 const nodeWidth = 200;
 const nodeHeight = 60;
 
-const getLayoutedNodes = (nodes: Node[], edges: Edge[], direction: "LR" | "TB" = "TB") => {
-  const isHorizontal = direction === "LR";
+const getLayoutedNodes = (
+  nodes: Node[],
+  edges: Edge[],
+  direction: "LR" | "TB" | "RL" | "BT" = "TB"
+) => {
+  const isHorizontal = direction === "LR" || direction === "RL";
   dagreGraph.setGraph({ rankdir: direction });
 
   nodes.forEach((node) => {
@@ -216,21 +224,6 @@ const fetchUsers = (): Promise<User[]> => {
         },
       ];
 
-      // Ensure approver_id exists for all tasks
-      data.forEach((user) => {
-        user.taskGroups.forEach((group) => {
-          group.tasks.forEach((task) => {
-            if (!task.approver_id) task.approver_id = null;
-          });
-        });
-
-        if (user.ungroupedTasks) {
-          user.ungroupedTasks.forEach((task) => {
-            if (!task.approver_id) task.approver_id = null;
-          });
-        }
-      });
-
       resolve(data);
     }, 800);
   });
@@ -241,12 +234,13 @@ const FlowWithDialog: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const [layoutDirection, setLayoutDirection] = useState<"TB" | "LR" | "BT" | "RL">("TB");
 
+  // fetch + build nodes and edges
   useEffect(() => {
     fetchUsers().then((data) => {
       setUsers(data);
 
-      // Build nodes
       const builtNodes: Node[] = data.map((user) => {
         const allTasks = [...user.taskGroups.flatMap((g) => g.tasks), ...(user.ungroupedTasks || [])];
         return {
@@ -266,7 +260,6 @@ const FlowWithDialog: React.FC = () => {
         };
       });
 
-      // Build edges
       const builtEdges: Edge[] = data.flatMap((user) => {
         const allTasks = [...user.taskGroups.flatMap((g) => g.tasks), ...(user.ungroupedTasks || [])];
 
@@ -286,11 +279,10 @@ const FlowWithDialog: React.FC = () => {
           }));
       });
 
-      const layoutedNodes = getLayoutedNodes(builtNodes, builtEdges, "TB");
-      setNodes(layoutedNodes);
+      setNodes(getLayoutedNodes(builtNodes, builtEdges, layoutDirection));
       setEdges(builtEdges);
     });
-  }, []);
+  }, [layoutDirection]);
 
   return (
     <div style={{ height: "100vh", width: "100%" }}>
@@ -309,6 +301,34 @@ const FlowWithDialog: React.FC = () => {
           <Controls />
           <MiniMap />
         </ReactFlow>
+
+        {/* Layout Selector */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            backgroundColor: "white",
+            padding: 1,
+            borderRadius: 1,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+          }}
+        >
+          <FormControl size="small">
+            <InputLabel id="layout-select-label">Layout</InputLabel>
+            <Select
+              labelId="layout-select-label"
+              value={layoutDirection}
+              label="Layout"
+              onChange={(e) => setLayoutDirection(e.target.value as "TB" | "LR" | "BT" | "RL")}
+            >
+              <MenuItem value="TB">Top-Bottom</MenuItem>
+              <MenuItem value="BT">Bottom-Top</MenuItem>
+              <MenuItem value="LR">Left-Right</MenuItem>
+              <MenuItem value="RL">Right-Left</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
         {/* Legend */}
         <Box
