@@ -4,10 +4,10 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  type Node,
+  type Edge,
+  Position,
 } from "reactflow";
-import type { Node } from "reactflow";
-import type { Edge } from "reactflow";
-import type { Position } from "reactflow";
 import "reactflow/dist/style.css";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  Box,
 } from "@mui/material";
 import dagre from "dagre";
 
@@ -24,10 +25,22 @@ import dagre from "dagre";
 interface Task {
   id: string;
   task_title: string;
-  status: "completed" | "in-progress" | "pending";
+  status:
+    | "backlog"
+    | "todo"
+    | "in-progress"
+    | "in-review"
+    | "blocked"
+    | "on-hold"
+    | "done"
+    | "closed"
+    | "cancelled";
+  approver_id: string | null;
+  task_group_id?: string;
 }
 
 interface TaskGroup {
+  id: string;
   group_name: string;
   tasks: Task[];
 }
@@ -35,180 +48,44 @@ interface TaskGroup {
 interface User {
   id: string;
   task_owner: string;
-  approvers: string[];
   taskGroups: TaskGroup[];
+  ungroupedTasks?: Task[];
 }
 
-// Sample data
-const users: User[] = [
-  {
-    id: "1",
-    task_owner: "Paul",
-    approvers: ["4", "4"],
-    taskGroups: [
-      {
-        group_name: "Frontend",
-        tasks: [
-          { id: "1", task_title: "Paul Task 1", status: "completed" },
-          { id: "2", task_title: "Paul Task 2", status: "in-progress" },
-        ],
-      },
-      {
-        group_name: "Backend",
-        tasks: [
-          { id: "3", task_title: "Paul Task 3", status: "pending" },
-          { id: "4", task_title: "Paul Task 4", status: "completed" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    task_owner: "Nicho",
-    approvers: ["3", "5"],
-    taskGroups: [
-      {
-        group_name: "API",
-        tasks: [
-          { id: "5", task_title: "Nicho Task 1", status: "completed" },
-          { id: "6", task_title: "Nicho Task 2", status: "completed" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "3",
-    task_owner: "Mark",
-    approvers: ["6"],
-    taskGroups: [
-      {
-        group_name: "Review",
-        tasks: [
-          { id: "7", task_title: "Mark Task 1", status: "completed" },
-          { id: "8", task_title: "Mark Task 2", status: "completed" },
-          { id: "9", task_title: "Mark Task 3", status: "pending" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "4",
-    task_owner: "Anna",
-    approvers: ["6", "7"],
-    taskGroups: [
-      {
-        group_name: "Testing",
-        tasks: [
-          { id: "10", task_title: "Anna Task 1", status: "completed" },
-          { id: "11", task_title: "Anna Task 2", status: "in-progress" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "5",
-    task_owner: "Luke",
-    approvers: ["7", "8"],
-    taskGroups: [
-      {
-        group_name: "Frontend",
-        tasks: [
-          { id: "12", task_title: "Luke Task 1", status: "completed" },
-          { id: "13", task_title: "Luke Task 2", status: "completed" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "6",
-    task_owner: "Sophia",
-    approvers: ["9"],
-    taskGroups: [
-      {
-        group_name: "Backend",
-        tasks: [
-          { id: "14", task_title: "Sophia Task 1", status: "pending" },
-          { id: "15", task_title: "Sophia Task 2", status: "in-progress" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "7",
-    task_owner: "James",
-    approvers: ["9", "10"],
-    taskGroups: [
-      {
-        group_name: "API",
-        tasks: [
-          { id: "16", task_title: "James Task 1", status: "completed" },
-          { id: "17", task_title: "James Task 2", status: "completed" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "8",
-    task_owner: "Olivia",
-    approvers: ["10"],
-    taskGroups: [
-      {
-        group_name: "Review",
-        tasks: [
-          { id: "18", task_title: "Olivia Task 1", status: "completed" },
-          { id: "19", task_title: "Olivia Task 2", status: "pending" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "9",
-    task_owner: "Emma",
-    approvers: [],
-    taskGroups: [
-      {
-        group_name: "Testing",
-        tasks: [
-          { id: "20", task_title: "Emma Task 1", status: "completed" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "10",
-    task_owner: "Liam",
-    approvers: [],
-    taskGroups: [
-      {
-        group_name: "Frontend",
-        tasks: [
-          { id: "21", task_title: "Liam Task 1", status: "in-progress" },
-        ],
-      },
-    ],
-  },
-];
-
-
-// Helper: status color for nodes
-const getStatusColor = (tasks: Task[]): string => {
-  const hasInProgress = tasks.some((t) => t.status === "in-progress");
-  const hasPending = tasks.some((t) => t.status === "pending");
-  const allCompleted = tasks.every((t) => t.status === "completed");
-
-  if (hasInProgress) return "#ff9800"; // orange
-  if (hasPending) return "#f44336"; // red
-  if (allCompleted) return "#4caf50"; // green
-  return "#9e9e9e"; // gray
+// Status colors
+const STATUS_COLORS: Record<string, string> = {
+  backlog: "#cfcfcf",
+  todo: "#90caf9",
+  "in-progress": "#ffb74d",
+  "in-review": "#81d4fa",
+  blocked: "#e57373",
+  "on-hold": "#fff176",
+  done: "#81c784",
+  closed: "#a1887f",
+  cancelled: "#b0bec5",
 };
 
-// Dagre layout setup
+// Get node color based on tasks
+const getStatusColor = (tasks: Task[]): string => {
+  if (tasks.some((t) => t.status === "blocked")) return STATUS_COLORS["blocked"];
+  if (tasks.some((t) => t.status === "in-progress")) return STATUS_COLORS["in-progress"];
+  if (tasks.some((t) => t.status === "in-review")) return STATUS_COLORS["in-review"];
+  if (tasks.some((t) => t.status === "todo")) return STATUS_COLORS["todo"];
+  if (tasks.some((t) => t.status === "backlog")) return STATUS_COLORS["backlog"];
+  if (tasks.some((t) => t.status === "on-hold")) return STATUS_COLORS["on-hold"];
+  if (tasks.some((t) => t.status === "cancelled")) return STATUS_COLORS["cancelled"];
+  if (tasks.every((t) => t.status === "done")) return STATUS_COLORS["done"];
+  if (tasks.every((t) => t.status === "closed")) return STATUS_COLORS["closed"];
+  return "#cfcfcf"; // fallback
+};
+
+// Dagre layout
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
-const nodeWidth = 180;
-const nodeHeight = 50;
+const nodeWidth = 200;
+const nodeHeight = 60;
 
-const getLayoutedNodes = (nodes: Node[], edges: Edge[], direction: "LR" | "TB" = "LR") => {
+const getLayoutedNodes = (nodes: Node[], edges: Edge[], direction: "LR" | "TB" = "TB") => {
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({ rankdir: direction });
 
@@ -236,52 +113,183 @@ const getLayoutedNodes = (nodes: Node[], edges: Edge[], direction: "LR" | "TB" =
   });
 };
 
+// Mock API
+const fetchUsers = (): Promise<User[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const data: User[] = [
+        {
+          id: "1",
+          task_owner: "Paul",
+          taskGroups: [
+            {
+              id: "1",
+              group_name: "Frontend",
+              tasks: [
+                { id: "1", task_title: "Paul Task 1", status: "done", approver_id: "9", task_group_id: "1" },
+                { id: "2", task_title: "Paul Task 2", status: "in-progress", approver_id: "4", task_group_id: "1" },
+                { id: "3", task_title: "Paul Task 3", status: "in-review", approver_id: "5", task_group_id: "1" },
+              ],
+            },
+            {
+              id: "2",
+              group_name: "Backend",
+              tasks: [
+                { id: "4", task_title: "Paul Task 4", status: "blocked", approver_id: "9", task_group_id: "2" },
+                { id: "5", task_title: "Paul Task 5", status: "on-hold", approver_id: "4", task_group_id: "2" },
+              ],
+            },
+          ],
+          ungroupedTasks: [{ id: "6", task_title: "Paul Ungrouped Task", status: "backlog", approver_id: "4" }],
+        },
+        {
+          id: "4",
+          task_owner: "John",
+          taskGroups: [
+            {
+              id: "3",
+              group_name: "DevOps",
+              tasks: [
+                { id: "7", task_title: "John Task 1", status: "in-progress", approver_id: "1", task_group_id: "3" },
+                { id: "8", task_title: "John Task 2", status: "todo", approver_id: "9", task_group_id: "3" },
+              ],
+            },
+          ],
+          ungroupedTasks: [{ id: "9", task_title: "John Ungrouped Task", status: "on-hold", approver_id: "5" }],
+        },
+        {
+          id: "5",
+          task_owner: "Sophia",
+          taskGroups: [
+            {
+              id: "4",
+              group_name: "Mobile",
+              tasks: [
+                { id: "10", task_title: "Sophia Task 1", status: "in-review", approver_id: "1", task_group_id: "4" },
+                { id: "11", task_title: "Sophia Task 2", status: "blocked", approver_id: "4", task_group_id: "4" },
+                { id: "12", task_title: "Sophia Task 3", status: "done", approver_id: "9", task_group_id: "4" },
+              ],
+            },
+          ],
+          ungroupedTasks: [{ id: "13", task_title: "Sophia Ungrouped Task", status: "todo", approver_id: "1" }],
+        },
+        {
+          id: "9",
+          task_owner: "Emma",
+          taskGroups: [
+            {
+              id: "5",
+              group_name: "Testing",
+              tasks: [
+                { id: "14", task_title: "Emma Task 1", status: "done", approver_id: "4", task_group_id: "5" },
+                { id: "15", task_title: "Emma Task 2", status: "in-review", approver_id: "1", task_group_id: "5" },
+              ],
+            },
+            {
+              id: "6",
+              group_name: "QA",
+              tasks: [
+                { id: "16", task_title: "Emma Task 3", status: "blocked", approver_id: "4", task_group_id: "6" },
+                { id: "17", task_title: "Emma Task 4", status: "cancelled", approver_id: "5", task_group_id: "6" },
+              ],
+            },
+          ],
+          ungroupedTasks: [
+            { id: "18", task_title: "Emma Ungrouped Task", status: "todo", approver_id: "4" },
+            { id: "19", task_title: "Emma Ungrouped Task 2", status: "closed", approver_id: "1" },
+          ],
+        },
+        {
+          id: "7",
+          task_owner: "Liam",
+          taskGroups: [
+            {
+              id: "7",
+              group_name: "Design",
+              tasks: [
+                { id: "20", task_title: "Liam Task 1", status: "done", approver_id: "9", task_group_id: "7" },
+                { id: "21", task_title: "Liam Task 2", status: "done", approver_id: "5", task_group_id: "7" },
+              ],
+            },
+          ],
+          ungroupedTasks: [{ id: "22", task_title: "Liam Ungrouped Task", status: "done", approver_id: "1" }],
+        },
+      ];
+
+      // Ensure approver_id exists for all tasks
+      data.forEach((user) => {
+        user.taskGroups.forEach((group) => {
+          group.tasks.forEach((task) => {
+            if (!task.approver_id) task.approver_id = null;
+          });
+        });
+
+        if (user.ungroupedTasks) {
+          user.ungroupedTasks.forEach((task) => {
+            if (!task.approver_id) task.approver_id = null;
+          });
+        }
+      });
+
+      resolve(data);
+    }, 800);
+  });
+};
+
 const FlowWithDialog: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
 
   useEffect(() => {
-    // Build nodes
-    const builtNodes: Node[] = users.map((user) => {
-      const allTasks = user.taskGroups.flatMap((g) => g.tasks);
-      return {
-        id: user.id,
-        data: { label: user.task_owner },
-        position: { x: 0, y: 0 },
-        style: {
-          backgroundColor: getStatusColor(allTasks),
-          color: "#fff",
-          padding: 10,
-          borderRadius: 8,
-          border: "2px solid #333",
-        },
-      };
-    });
+    fetchUsers().then((data) => {
+      setUsers(data);
 
-    // Build edges with green if all tasks for that approver are completed
-    const builtEdges: Edge[] = users.flatMap((user) =>
-      user.approvers.map((approverId) => {
-        const approver = users.find((u) => u.id === approverId);
-        if (!approver) return null;
-
-        // Tasks related to this approver (here we consider all user's tasks for simplicity)
-        const relatedTasks = user.taskGroups.flatMap((g) => g.tasks);
-        const allCompleted = relatedTasks.every((t) => t.status === "completed");
-
+      // Build nodes
+      const builtNodes: Node[] = data.map((user) => {
+        const allTasks = [...user.taskGroups.flatMap((g) => g.tasks), ...(user.ungroupedTasks || [])];
         return {
-          id: `e${user.id}-${approverId}`,
-          source: user.id,
-          target: approverId,
-          animated: !allCompleted,
-          style: { stroke: allCompleted ? "#4caf50" : "#888" },
-        } as Edge;
-      }).filter(Boolean) as Edge[]
-    );
+          id: user.id,
+          data: { label: user.task_owner },
+          position: { x: 0, y: 0 },
+          style: {
+            backgroundColor: getStatusColor(allTasks),
+            color: "#000",
+            padding: 15,
+            borderRadius: 5,
+            border: "2px solid #555",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            textAlign: "center",
+          },
+        };
+      });
 
-    const layoutedNodes = getLayoutedNodes(builtNodes, builtEdges, "LR");
-    setNodes(layoutedNodes);
-    setEdges(builtEdges);
+      // Build edges
+      const builtEdges: Edge[] = data.flatMap((user) => {
+        const allTasks = [...user.taskGroups.flatMap((g) => g.tasks), ...(user.ungroupedTasks || [])];
+
+        return allTasks
+          .filter((task) => task.approver_id)
+          .map((task) => ({
+            id: `e${task.id}-${task.approver_id}`,
+            source: user.id,
+            target: task.approver_id!,
+            animated: task.status !== "done",
+            arrowHeadType: "arrowclosed",
+            style: {
+              stroke: task.status === "done" ? "#4caf50" : STATUS_COLORS[task.status],
+              strokeWidth: 2,
+              strokeDasharray: task.status === "done" ? 0 : 6,
+            },
+          }));
+      });
+
+      const layoutedNodes = getLayoutedNodes(builtNodes, builtEdges, "TB");
+      setNodes(layoutedNodes);
+      setEdges(builtEdges);
+    });
   }, []);
 
   return (
@@ -302,38 +310,87 @@ const FlowWithDialog: React.FC = () => {
           <MiniMap />
         </ReactFlow>
 
-        {/* Task Viewer Dialog */}
-        <Dialog
-          open={!!selectedUser}
-          onClose={() => setSelectedUser(null)}
-          fullWidth
-          maxWidth="sm"
+        {/* Legend */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 10,
+            backgroundColor: "transparent",
+            padding: 0,
+            borderRadius: 0,
+            boxShadow: "none",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.5,
+          }}
         >
+          {Object.entries(STATUS_COLORS).map(([status, color]) => (
+            <Chip
+              key={status}
+              label={status.replace("-", " ").toUpperCase()}
+              sx={{
+                bgcolor: color,
+                color: "#000",
+                fontSize: "0.7rem",
+                borderRadius: 1,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              }}
+              size="small"
+            />
+          ))}
+        </Box>
+
+        {/* Task Viewer Dialog */}
+        <Dialog open={!!selectedUser} onClose={() => setSelectedUser(null)} fullWidth maxWidth="sm">
           <DialogTitle>{selectedUser?.task_owner} – Task Viewer</DialogTitle>
           <DialogContent>
             {selectedUser?.taskGroups.map((group) => (
               <div key={group.group_name} style={{ marginBottom: "1rem" }}>
                 <h4>{group.group_name}</h4>
                 <List>
-                  {group.tasks.map((task) => (
-                    <ListItem key={task.id}>
-                      <ListItemText primary={task.task_title} />
-                      <Chip
-                        label={task.status}
-                        color={
-                          task.status === "completed"
-                            ? "success"
-                            : task.status === "in-progress"
-                            ? "warning"
-                            : "error"
-                        }
-                        size="small"
-                      />
-                    </ListItem>
-                  ))}
+                  {group.tasks.map((task) => {
+                    const approver = users.find((u) => u.id === task.approver_id);
+                    return (
+                      <ListItem key={task.id} sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <ListItemText
+                          primary={task.task_title}
+                          secondary={approver ? `Approver: ${approver.task_owner}` : "No approver"}
+                        />
+                        <Chip
+                          label={task.status.replace("-", " ")}
+                          sx={{ bgcolor: STATUS_COLORS[task.status], color: "#000" }}
+                          size="small"
+                        />
+                      </ListItem>
+                    );
+                  })}
                 </List>
               </div>
             ))}
+
+            {selectedUser?.ungroupedTasks?.length ? (
+              <div style={{ marginBottom: "1rem" }}>
+                <h4>Ungrouped</h4>
+                <List>
+                  {selectedUser.ungroupedTasks.map((task) => {
+                    const approver = users.find((u) => u.id === task.approver_id);
+                    return (
+                      <ListItem key={task.id} sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <ListItemText
+                          primary={task.task_title}
+                          secondary={approver ? `Approver: ${approver.task_owner}` : "No approver"}
+                        />
+                        <Chip
+                          label={task.status.replace("-", " ")}
+                          sx={{ bgcolor: STATUS_COLORS[task.status], color: "#000" }}
+                          size="small"
+                        />
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </div>
+            ) : null}
           </DialogContent>
         </Dialog>
       </ReactFlowProvider>
