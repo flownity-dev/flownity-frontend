@@ -1,285 +1,344 @@
 import React, { useState, useEffect } from "react";
 import ReactFlow, {
-    Background,
-    Controls,
-    MiniMap,
-    ReactFlowProvider,
+  ReactFlowProvider,
+  Background,
+  Controls,
+  MiniMap,
 } from "reactflow";
-import type { Node, Edge } from "reactflow";
+import type { Node } from "reactflow";
+import type { Edge } from "reactflow";
+import type { Position } from "reactflow";
 import "reactflow/dist/style.css";
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    Paper,
-    Typography,
-    Chip,
-    Box,
-    Divider,
-    IconButton
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import dagre from "dagre";
-import Tooltip from "@mui/material/Tooltip";
-import { useTheme } from '../theme/ThemeProvider';
-import { useTheme as useMuiTheme } from '@mui/material/styles';
 
-type Task = { id: string; label: string; status: string };
-type User = { id: string; label: string; tasks: Task[]; approver?: string };
+// Types
+interface Task {
+  id: string;
+  task_title: string;
+  status: "completed" | "in-progress" | "pending";
+}
 
+interface TaskGroup {
+  group_name: string;
+  tasks: Task[];
+}
+
+interface User {
+  id: string;
+  task_owner: string;
+  approvers: string[];
+  taskGroups: TaskGroup[];
+}
+
+// Sample data
 const users: User[] = [
-    {
-        id: "paul",
-        label: "Paul",
-        approver: "mark",
+  {
+    id: "1",
+    task_owner: "Paul",
+    approvers: ["4", "4"],
+    taskGroups: [
+      {
+        group_name: "Frontend",
         tasks: [
-            { id: "paul-task-1", label: "Paul Task 1", status: "completed" },
-            { id: "paul-task-2", label: "Paul Task 2", status: "completed" },
-            { id: "paul-task-3", label: "Paul Task 3", status: "completed" },
+          { id: "1", task_title: "Paul Task 1", status: "completed" },
+          { id: "2", task_title: "Paul Task 2", status: "in-progress" },
         ],
-    },
-    {
-        id: "nicho",
-        label: "Nicho",
-        approver: "mark",
+      },
+      {
+        group_name: "Backend",
         tasks: [
-            { id: "nicho-task-1", label: "Nicho Task 1", status: "completed" },
-            { id: "nicho-task-2", label: "Nicho Task 2", status: "in-progress" },
+          { id: "3", task_title: "Paul Task 3", status: "pending" },
+          { id: "4", task_title: "Paul Task 4", status: "completed" },
         ],
-    },
-    {
-        id: "mark",
-        label: "Mark (Approver)",
+      },
+    ],
+  },
+  {
+    id: "2",
+    task_owner: "Nicho",
+    approvers: ["3", "5"],
+    taskGroups: [
+      {
+        group_name: "API",
         tasks: [
-            { id: "mark-task-1", label: "Mark Task 1", status: "completed" },
-            { id: "mark-task-2", label: "Mark Task 2", status: "completed" },
-            { id: "mark-task-3", label: "Mark Task 3", status: "pending" },
+          { id: "5", task_title: "Nicho Task 1", status: "completed" },
+          { id: "6", task_title: "Nicho Task 2", status: "completed" },
         ],
-    },
+      },
+    ],
+  },
+  {
+    id: "3",
+    task_owner: "Mark",
+    approvers: ["6"],
+    taskGroups: [
+      {
+        group_name: "Review",
+        tasks: [
+          { id: "7", task_title: "Mark Task 1", status: "completed" },
+          { id: "8", task_title: "Mark Task 2", status: "completed" },
+          { id: "9", task_title: "Mark Task 3", status: "pending" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "4",
+    task_owner: "Anna",
+    approvers: ["6", "7"],
+    taskGroups: [
+      {
+        group_name: "Testing",
+        tasks: [
+          { id: "10", task_title: "Anna Task 1", status: "completed" },
+          { id: "11", task_title: "Anna Task 2", status: "in-progress" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "5",
+    task_owner: "Luke",
+    approvers: ["7", "8"],
+    taskGroups: [
+      {
+        group_name: "Frontend",
+        tasks: [
+          { id: "12", task_title: "Luke Task 1", status: "completed" },
+          { id: "13", task_title: "Luke Task 2", status: "completed" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "6",
+    task_owner: "Sophia",
+    approvers: ["9"],
+    taskGroups: [
+      {
+        group_name: "Backend",
+        tasks: [
+          { id: "14", task_title: "Sophia Task 1", status: "pending" },
+          { id: "15", task_title: "Sophia Task 2", status: "in-progress" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "7",
+    task_owner: "James",
+    approvers: ["9", "10"],
+    taskGroups: [
+      {
+        group_name: "API",
+        tasks: [
+          { id: "16", task_title: "James Task 1", status: "completed" },
+          { id: "17", task_title: "James Task 2", status: "completed" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "8",
+    task_owner: "Olivia",
+    approvers: ["10"],
+    taskGroups: [
+      {
+        group_name: "Review",
+        tasks: [
+          { id: "18", task_title: "Olivia Task 1", status: "completed" },
+          { id: "19", task_title: "Olivia Task 2", status: "pending" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "9",
+    task_owner: "Emma",
+    approvers: [],
+    taskGroups: [
+      {
+        group_name: "Testing",
+        tasks: [
+          { id: "20", task_title: "Emma Task 1", status: "completed" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "10",
+    task_owner: "Liam",
+    approvers: [],
+    taskGroups: [
+      {
+        group_name: "Frontend",
+        tasks: [
+          { id: "21", task_title: "Liam Task 1", status: "in-progress" },
+        ],
+      },
+    ],
+  },
 ];
 
-// Dagre layout
+
+// Helper: status color for nodes
+const getStatusColor = (tasks: Task[]): string => {
+  const hasInProgress = tasks.some((t) => t.status === "in-progress");
+  const hasPending = tasks.some((t) => t.status === "pending");
+  const allCompleted = tasks.every((t) => t.status === "completed");
+
+  if (hasInProgress) return "#ff9800"; // orange
+  if (hasPending) return "#f44336"; // red
+  if (allCompleted) return "#4caf50"; // green
+  return "#9e9e9e"; // gray
+};
+
+// Dagre layout setup
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
-const nodeWidth = 172;
-const nodeHeight = 36;
+const nodeWidth = 180;
+const nodeHeight = 50;
 
-const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
-    dagreGraph.setGraph({ rankdir: "TB" });
-    nodes.forEach((node) =>
-        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight })
-    );
-    edges.forEach((edge) => dagreGraph.setEdge(edge.source, edge.target));
-    dagre.layout(dagreGraph);
+const getLayoutedNodes = (nodes: Node[], edges: Edge[], direction: "LR" | "TB" = "LR") => {
+  const isHorizontal = direction === "LR";
+  dagreGraph.setGraph({ rankdir: direction });
 
-    const layoutedNodes = nodes.map((node) => {
-        const nodeWithPosition = dagreGraph.node(node.id);
-        node.position = {
-            x: nodeWithPosition.x - nodeWidth / 2,
-            y: nodeWithPosition.y - nodeHeight / 2,
-        };
-        return node;
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  return nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+
+    node.targetPosition = (isHorizontal ? "left" : "top") as Position;
+    node.sourcePosition = (isHorizontal ? "right" : "bottom") as Position;
+
+    node.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+    return node;
+  });
+};
+
+const FlowWithDialog: React.FC = () => {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+
+  useEffect(() => {
+    // Build nodes
+    const builtNodes: Node[] = users.map((user) => {
+      const allTasks = user.taskGroups.flatMap((g) => g.tasks);
+      return {
+        id: user.id,
+        data: { label: user.task_owner },
+        position: { x: 0, y: 0 },
+        style: {
+          backgroundColor: getStatusColor(allTasks),
+          color: "#fff",
+          padding: 10,
+          borderRadius: 8,
+          border: "2px solid #333",
+        },
+      };
     });
 
-    return { nodes: layoutedNodes, edges };
-};
+    // Build edges with green if all tasks for that approver are completed
+    const builtEdges: Edge[] = users.flatMap((user) =>
+      user.approvers.map((approverId) => {
+        const approver = users.find((u) => u.id === approverId);
+        if (!approver) return null;
 
-const Diagram: React.FC = () => {
-    const { mode, toggleTheme } = useTheme();
-    const muiTheme = useMuiTheme();
-    const [openUser, setOpenUser] = useState<User | null>(null);
-    const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
-    const [layoutedEdges, setLayoutedEdges] = useState<Edge[]>([]);
-    const darkMode = mode === 'dark';
+        // Tasks related to this approver (here we consider all user's tasks for simplicity)
+        const relatedTasks = user.taskGroups.flatMap((g) => g.tasks);
+        const allCompleted = relatedTasks.every((t) => t.status === "completed");
 
-    useEffect(() => {
-        const nodes: Node[] = users.map((user) => {
-            const allCompleted = user.tasks.every((t) => t.status === "completed");
-            const inProgress = user.tasks.some((t) => t.status === "in-progress");
-
-            return {
-                id: user.id,
-                type: "default",
-                data: { label: user.label },
-                position: { x: 0, y: 0 },
-                style: {
-                    backgroundColor: allCompleted
-                        ? muiTheme.palette.success.main
-                        : inProgress
-                        ? muiTheme.palette.warning.main
-                        : muiTheme.palette.background.paper,
-                    color: muiTheme.palette.text.primary,
-                    padding: 10,
-                    border: `1px solid ${muiTheme.palette.divider}`,
-                    borderRadius: muiTheme.shape.borderRadius,
-                },
-            };
-        });
-
-        const edges: Edge[] = users
-            .filter((u) => u.approver)
-            .map((u) => {
-                const allCompleted = u.tasks.every((t) => t.status === "completed");
-                const inProgress = u.tasks.some((t) => t.status === "in-progress");
-
-                return {
-                    id: `${u.id}-to-${u.approver}`,
-                    source: u.id,
-                    target: u.approver!,
-                    animated: inProgress,
-                    style: {
-                        stroke: allCompleted
-                            ? muiTheme.palette.success.main
-                            : inProgress
-                            ? muiTheme.palette.warning.main
-                            : muiTheme.palette.text.secondary,
-                        strokeDasharray: inProgress ? "5,5" : undefined,
-                    },
-                    type: "smoothstep",
-                };
-            });
-
-        const { nodes: n, edges: e } = getLayoutedElements(nodes, edges);
-        setLayoutedNodes(n);
-        setLayoutedEdges(e);
-    }, [darkMode]);
-
-    const handleNodeClick = (nodeId: string) => {
-        const user = users.find((u) => u.id === nodeId);
-        if (user) setOpenUser(user);
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "completed":
-                return "success";
-            case "in-progress":
-                return "warning";
-            case "pending":
-                return "default";
-            default:
-                return "default";
-        }
-    };
-
-    return (
-        <div
-            style={{
-                width: "100%",
-                height: "100vh",
-                background: muiTheme.palette.background.default,
-                transition: "background 0.3s",
-            }}
-        >
-            <ReactFlowProvider>
-            <Box position="absolute" top={10} right={10} zIndex={10} display="flex" alignItems="center">
-    <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
-        <IconButton
-            onClick={toggleTheme}
-            sx={{
-                bgcolor: muiTheme.palette.background.paper,
-                color: muiTheme.palette.text.primary,
-                border: "1px solid",
-                borderColor: muiTheme.palette.divider,
-                "&:hover": {
-                    bgcolor: muiTheme.palette.action.hover,
-                },
-                transition: "all 0.3s",
-            }}
-        >
-        </IconButton>
-    </Tooltip>
-</Box>
-
-                <ReactFlow
-                    nodes={layoutedNodes}
-                    edges={layoutedEdges}
-                    onNodeClick={(_, node) => handleNodeClick(node.id)}
-                    fitView
-                    nodesDraggable={false}
-                    nodesConnectable={false}
-                    panOnScroll={false}
-                    panOnDrag={true}
-                    zoomOnScroll={true}
-                    zoomOnPinch={false}
-                    zoomOnDoubleClick={false}
-                >
-                    <Background color={muiTheme.palette.divider} gap={16} />
-                    <Controls />
-                    <MiniMap
-                        nodeColor={(node) => node.style?.backgroundColor as string}
-                        maskColor={darkMode ? "#00000066" : "#ffffff66"}
-                    />
-                </ReactFlow>
-
-                <Dialog
-    open={!!openUser}
-    onClose={() => setOpenUser(null)}
-    fullWidth
-    maxWidth="xs"
-    PaperProps={{
-        sx: {
-            bgcolor: muiTheme.palette.background.paper,
-            color: muiTheme.palette.text.primary,
-            borderRadius: 3,
-        },
-    }}
->
-    {/* Header with title and close button */}
-    <Box display="flex" alignItems="center" justifyContent="space-between" px={2} pt={2}>
-        <DialogTitle sx={{ p: 0 }}>{openUser?.label}'s Tasks</DialogTitle>
-        <IconButton onClick={() => setOpenUser(null)}>
-            <CloseIcon sx={{ color: muiTheme.palette.text.primary }} />
-        </IconButton>
-    </Box>
-
-    <Divider sx={{ my: 1 }} />
-
-    {/* Task list as Paper cards */}
-    <DialogContent sx={{ pt: 1 }}>
-        <Box display="flex" flexDirection="column" gap={2}>
-            {openUser?.tasks.map((task) => (
-                <Paper
-                    key={task.id}
-                    elevation={3}
-                    sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        bgcolor:
-                            task.status === "completed"
-                                ? `${muiTheme.palette.success.main}20`
-                                : task.status === "in-progress"
-                                ? `${muiTheme.palette.warning.main}20`
-                                : `${muiTheme.palette.action.disabled}20`,
-                        color: muiTheme.palette.text.primary,
-                        transition: "all 0.3s",
-                    }}
-                >
-                    <Box>
-                        <Typography variant="subtitle1" fontWeight={500}>
-                            {task.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
-                        </Typography>
-                    </Box>
-                    <Chip
-                        label={task.status}
-                        color={getStatusColor(task.status)}
-                        size="small"
-                    />
-                </Paper>
-            ))}
-        </Box>
-    </DialogContent>
-</Dialog>
-
-            </ReactFlowProvider>
-        </div>
+        return {
+          id: `e${user.id}-${approverId}`,
+          source: user.id,
+          target: approverId,
+          animated: !allCompleted,
+          style: { stroke: allCompleted ? "#4caf50" : "#888" },
+        } as Edge;
+      }).filter(Boolean) as Edge[]
     );
+
+    const layoutedNodes = getLayoutedNodes(builtNodes, builtEdges, "LR");
+    setNodes(layoutedNodes);
+    setEdges(builtEdges);
+  }, []);
+
+  return (
+    <div style={{ height: "100vh", width: "100%" }}>
+      <ReactFlowProvider>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodeClick={(_, node) => {
+            const user = users.find((u) => u.id === node.id);
+            if (user) setSelectedUser(user);
+          }}
+          fitView
+          nodesDraggable={false}
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+
+        {/* Task Viewer Dialog */}
+        <Dialog
+          open={!!selectedUser}
+          onClose={() => setSelectedUser(null)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>{selectedUser?.task_owner} – Task Viewer</DialogTitle>
+          <DialogContent>
+            {selectedUser?.taskGroups.map((group) => (
+              <div key={group.group_name} style={{ marginBottom: "1rem" }}>
+                <h4>{group.group_name}</h4>
+                <List>
+                  {group.tasks.map((task) => (
+                    <ListItem key={task.id}>
+                      <ListItemText primary={task.task_title} />
+                      <Chip
+                        label={task.status}
+                        color={
+                          task.status === "completed"
+                            ? "success"
+                            : task.status === "in-progress"
+                            ? "warning"
+                            : "error"
+                        }
+                        size="small"
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </div>
+            ))}
+          </DialogContent>
+        </Dialog>
+      </ReactFlowProvider>
+    </div>
+  );
 };
 
-export default Diagram;
+export default FlowWithDialog;
