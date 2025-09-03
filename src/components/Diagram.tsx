@@ -30,17 +30,17 @@ interface Task {
   id: string;
   task_title: string;
   status:
-    | "backlog"
-    | "todo"
-    | "in-progress"
-    | "in-review"
-    | "blocked"
-    | "on-hold"
-    | "done"
-    | "closed"
-    | "cancelled";
+  | "backlog"
+  | "todo"
+  | "in-progress"
+  | "in-review"
+  | "blocked"
+  | "on-hold"
+  | "done"
+  | "closed"
+  | "cancelled";
   approver_id: string | null;
-  task_group_id?: string;
+  task_group_id?: string | null;
 }
 
 interface TaskGroup {
@@ -49,11 +49,17 @@ interface TaskGroup {
   tasks: Task[];
 }
 
+interface ApproverTasks {
+  taskGroups: TaskGroup[];
+  ungroupedTasks: Task[];
+}
+
 interface User {
   id: string;
   task_owner: string;
   taskGroups: TaskGroup[];
   ungroupedTasks?: Task[];
+  approverTasks: ApproverTasks;
 }
 
 // Status colors
@@ -121,112 +127,15 @@ const getLayoutedNodes = (
   });
 };
 
-// Mock API
-const fetchUsers = (): Promise<User[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const data: User[] = [
-        {
-          id: "1",
-          task_owner: "Paul",
-          taskGroups: [
-            {
-              id: "1",
-              group_name: "Frontend",
-              tasks: [
-                { id: "1", task_title: "Paul Task 1", status: "done", approver_id: "9", task_group_id: "1" },
-                { id: "2", task_title: "Paul Task 2", status: "in-progress", approver_id: "4", task_group_id: "1" },
-                { id: "3", task_title: "Paul Task 3", status: "in-review", approver_id: "5", task_group_id: "1" },
-              ],
-            },
-            {
-              id: "2",
-              group_name: "Backend",
-              tasks: [
-                { id: "4", task_title: "Paul Task 4", status: "blocked", approver_id: "9", task_group_id: "2" },
-                { id: "5", task_title: "Paul Task 5", status: "on-hold", approver_id: "4", task_group_id: "2" },
-              ],
-            },
-          ],
-          ungroupedTasks: [{ id: "6", task_title: "Paul Ungrouped Task", status: "backlog", approver_id: "4" }],
-        },
-        {
-          id: "4",
-          task_owner: "John",
-          taskGroups: [
-            {
-              id: "3",
-              group_name: "DevOps",
-              tasks: [
-                { id: "7", task_title: "John Task 1", status: "in-progress", approver_id: "1", task_group_id: "3" },
-                { id: "8", task_title: "John Task 2", status: "todo", approver_id: "9", task_group_id: "3" },
-              ],
-            },
-          ],
-          ungroupedTasks: [{ id: "9", task_title: "John Ungrouped Task", status: "on-hold", approver_id: "5" }],
-        },
-        {
-          id: "5",
-          task_owner: "Sophia",
-          taskGroups: [
-            {
-              id: "4",
-              group_name: "Mobile",
-              tasks: [
-                { id: "10", task_title: "Sophia Task 1", status: "in-review", approver_id: "1", task_group_id: "4" },
-                { id: "11", task_title: "Sophia Task 2", status: "blocked", approver_id: "4", task_group_id: "4" },
-                { id: "12", task_title: "Sophia Task 3", status: "done", approver_id: "9", task_group_id: "4" },
-              ],
-            },
-          ],
-          ungroupedTasks: [{ id: "13", task_title: "Sophia Ungrouped Task", status: "todo", approver_id: "1" }],
-        },
-        {
-          id: "9",
-          task_owner: "Emma",
-          taskGroups: [
-            {
-              id: "5",
-              group_name: "Testing",
-              tasks: [
-                { id: "14", task_title: "Emma Task 1", status: "done", approver_id: "4", task_group_id: "5" },
-                { id: "15", task_title: "Emma Task 2", status: "in-review", approver_id: "1", task_group_id: "5" },
-              ],
-            },
-            {
-              id: "6",
-              group_name: "QA",
-              tasks: [
-                { id: "16", task_title: "Emma Task 3", status: "blocked", approver_id: "4", task_group_id: "6" },
-                { id: "17", task_title: "Emma Task 4", status: "cancelled", approver_id: "5", task_group_id: "6" },
-              ],
-            },
-          ],
-          ungroupedTasks: [
-            { id: "18", task_title: "Emma Ungrouped Task", status: "todo", approver_id: "4" },
-            { id: "19", task_title: "Emma Ungrouped Task 2", status: "closed", approver_id: "1" },
-          ],
-        },
-        {
-          id: "7",
-          task_owner: "Liam",
-          taskGroups: [
-            {
-              id: "7",
-              group_name: "Design",
-              tasks: [
-                { id: "20", task_title: "Liam Task 1", status: "done", approver_id: "9", task_group_id: "7" },
-                { id: "21", task_title: "Liam Task 2", status: "done", approver_id: "5", task_group_id: "7" },
-              ],
-            },
-          ],
-          ungroupedTasks: [{ id: "22", task_title: "Liam Ungrouped Task", status: "done", approver_id: "1" }],
-        },
-      ];
-
-      resolve(data);
-    }, 800);
+// API fetch
+const fetchUsers = async (): Promise<User[]> => {
+  const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/projects/project-flow/5`, {
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_API_BEARER_TOKEN}`,
+    },
   });
+  const json = await res.json();
+  return json.data;
 };
 
 const FlowWithDialog: React.FC = () => {
@@ -242,7 +151,12 @@ const FlowWithDialog: React.FC = () => {
       setUsers(data);
 
       const builtNodes: Node[] = data.map((user) => {
-        const allTasks = [...user.taskGroups.flatMap((g) => g.tasks), ...(user.ungroupedTasks || [])];
+        const allTasks = [
+          ...user.taskGroups.flatMap((g) => g.tasks),
+          ...(user.ungroupedTasks || []),
+          ...user.approverTasks.taskGroups.flatMap((g) => g.tasks),
+          ...(user.approverTasks.ungroupedTasks || []),
+        ];
         return {
           id: user.id,
           data: { label: user.task_owner },
@@ -261,16 +175,18 @@ const FlowWithDialog: React.FC = () => {
       });
 
       const builtEdges: Edge[] = data.flatMap((user) => {
-        const allTasks = [...user.taskGroups.flatMap((g) => g.tasks), ...(user.ungroupedTasks || [])];
+        const allTasks = [
+          ...user.taskGroups.flatMap((g) => g.tasks),
+          ...(user.ungroupedTasks || []),
+        ];
 
         return allTasks
           .filter((task) => task.approver_id)
           .map((task) => ({
             id: `e${task.id}-${task.approver_id}`,
             source: user.id,
-            target: task.approver_id!,
+            target: task.approver_id!.toString(),
             animated: task.status !== "done",
-            arrowHeadType: "arrowclosed",
             style: {
               stroke: task.status === "done" ? "#4caf50" : STATUS_COLORS[task.status],
               strokeWidth: 2,
@@ -320,7 +236,9 @@ const FlowWithDialog: React.FC = () => {
               labelId="layout-select-label"
               value={layoutDirection}
               label="Layout"
-              onChange={(e) => setLayoutDirection(e.target.value as "TB" | "LR" | "BT" | "RL")}
+              onChange={(e) =>
+                setLayoutDirection(e.target.value as "TB" | "LR" | "BT" | "RL")
+              }
             >
               <MenuItem value="TB">Top-Bottom</MenuItem>
               <MenuItem value="BT">Bottom-Top</MenuItem>
@@ -330,46 +248,92 @@ const FlowWithDialog: React.FC = () => {
           </FormControl>
         </Box>
 
-        {/* Legend */}
+{/* Legend + Completion bar container */}
+<Box
+  sx={{
+    position: "absolute",
+    top: 10,
+    backgroundColor: "transparent",
+    padding: 0,
+    borderRadius: 0,
+    boxShadow: "none",
+    display: "flex",
+    flexDirection: "column",   // 👈 stack vertically
+    gap: 0.5,
+  }}
+>
+  {/* Completion bar */}
+  {(() => {
+    const allTasks = users.flatMap((u) => [
+      ...u.taskGroups.flatMap((g) => g.tasks),
+      ...(u.ungroupedTasks || []),
+      ...u.approverTasks.taskGroups.flatMap((g) => g.tasks),
+      ...(u.approverTasks.ungroupedTasks || []),
+    ]);
+    const done = allTasks.filter((t) => t.status === "done" || t.status === "closed");
+    const percent = allTasks.length
+      ? Math.round((done.length / allTasks.length) * 100)
+      : 0;
+
+    return (
+      <Box sx={{ width: 220 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.3 }}>
+          <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Completion</span>
+          <span style={{ fontSize: "0.7rem" }}>{percent}%</span>
+        </Box>
         <Box
           sx={{
-            position: "absolute",
-            top: 10,
-            backgroundColor: "transparent",
-            padding: 0,
-            borderRadius: 0,
-            boxShadow: "none",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 0.5,
+            height: 6,
+            borderRadius: 1,
+            overflow: "hidden",
+            backgroundColor: "#e0e0e0",
           }}
         >
-          {Object.entries(STATUS_COLORS).map(([status, color]) => (
-            <Chip
-              key={status}
-              label={status.replace("-", " ").toUpperCase()}
-              sx={{
-                bgcolor: color,
-                color: "#000",
-                fontSize: "0.7rem",
-                borderRadius: 1,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-              }}
-              size="small"
-            />
-          ))}
+          <Box
+            sx={{
+              height: "100%",
+              width: `${percent}%`,
+              backgroundColor:
+                percent < 30 ? "#e57373" : percent < 70 ? "#ffb74d" : "#81c784",
+              transition: "width 0.3s ease",
+            }}
+          />
         </Box>
+      </Box>
+    );
+  })()}
+
+  {/* Status legends */}
+  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+    {Object.entries(STATUS_COLORS).map(([status, color]) => (
+      <Chip
+        key={status}
+        label={status.replace("-", " ").toUpperCase()}
+        sx={{
+          bgcolor: color,
+          color: "#000",
+          fontSize: "0.7rem",
+          borderRadius: 1,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+        }}
+        size="small"
+      />
+    ))}
+  </Box>
+</Box>
+
 
         {/* Task Viewer Dialog */}
         <Dialog open={!!selectedUser} onClose={() => setSelectedUser(null)} fullWidth maxWidth="sm">
           <DialogTitle>{selectedUser?.task_owner} – Task Viewer</DialogTitle>
           <DialogContent>
+            {/* Own Tasks */}
             {selectedUser?.taskGroups.map((group) => (
               <div key={group.group_name} style={{ marginBottom: "1rem" }}>
                 <h4>{group.group_name}</h4>
                 <List>
                   {group.tasks.map((task) => {
-                    const approver = users.find((u) => u.id === task.approver_id);
+                    const approver = users.find((u) => u.id === task.approver_id?.toString());
                     return (
                       <ListItem key={task.id} sx={{ display: "flex", justifyContent: "space-between" }}>
                         <ListItemText
@@ -393,7 +357,7 @@ const FlowWithDialog: React.FC = () => {
                 <h4>Ungrouped</h4>
                 <List>
                   {selectedUser.ungroupedTasks.map((task) => {
-                    const approver = users.find((u) => u.id === task.approver_id);
+                    const approver = users.find((u) => u.id === task.approver_id?.toString());
                     return (
                       <ListItem key={task.id} sx={{ display: "flex", justifyContent: "space-between" }}>
                         <ListItemText
@@ -408,6 +372,43 @@ const FlowWithDialog: React.FC = () => {
                       </ListItem>
                     );
                   })}
+                </List>
+              </div>
+            ) : null}
+
+            {/* Approver Tasks */}
+            {selectedUser?.approverTasks.taskGroups.map((group) => (
+              <div key={group.group_name} style={{ marginBottom: "1rem" }}>
+                <h4>Approver – {group.group_name}</h4>
+                <List>
+                  {group.tasks.map((task) => (
+                    <ListItem key={task.id} sx={{ display: "flex", justifyContent: "space-between" }}>
+                      <ListItemText primary={task.task_title} secondary="As Approver" />
+                      <Chip
+                        label={task.status.replace("-", " ")}
+                        sx={{ bgcolor: STATUS_COLORS[task.status], color: "#000" }}
+                        size="small"
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </div>
+            ))}
+
+            {selectedUser?.approverTasks.ungroupedTasks.length ? (
+              <div style={{ marginBottom: "1rem" }}>
+                <h4>Approver – Ungrouped</h4>
+                <List>
+                  {selectedUser.approverTasks.ungroupedTasks.map((task) => (
+                    <ListItem key={task.id} sx={{ display: "flex", justifyContent: "space-between" }}>
+                      <ListItemText primary={task.task_title} secondary="As Approver" />
+                      <Chip
+                        label={task.status.replace("-", " ")}
+                        sx={{ bgcolor: STATUS_COLORS[task.status], color: "#000" }}
+                        size="small"
+                      />
+                    </ListItem>
+                  ))}
                 </List>
               </div>
             ) : null}

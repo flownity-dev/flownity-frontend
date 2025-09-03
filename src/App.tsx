@@ -61,7 +61,7 @@ function MainLayout() {
         }}
       >
         <Routes>
-          <Route path="/diagram" element={
+          <Route path="/diagram/:id" element={
             <div style={{
               width: '100%',
               height: '100vh',
