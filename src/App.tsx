@@ -11,9 +11,11 @@ import HomePage from './components/Homepage';
 import { Projects } from './components/Projects';
 import { ProjectDetailView } from './components/Projects/ProjectDetailView';
 import { TaskGroups, TaskGroupDetailView } from './components/TaskGroups';
+import ProtectedRoute from './components/ProtectedRoute';
+import { isAuthenticated } from './utils/localStorage';
 
 // Main layout component that uses sidebar context - for authenticated routes only
-function MainLayout() {
+function MainLayout({ children }: { children: React.ReactNode }) {
   const theme = useTheme();
   const { sidebarState } = useSidebar();
   const { isCollapsed, isMobile } = sidebarState;
@@ -60,55 +62,7 @@ function MainLayout() {
           },
         }}
       >
-        <Routes>
-          <Route path="/diagram/:id" element={
-            <div style={{
-              width: '100%',
-              height: '100vh',
-              margin: 0,
-              padding: 0,
-              overflow: 'hidden'
-            }}>
-              <Diagram />
-            </div>
-          } />
-          <Route path="/" element={<HomePage />} />
-          <Route path="/project" element={<Projects />} />
-          <Route path="/project/:id" element={
-            <ErrorBoundary
-              fallback={
-                <Box sx={{ p: 4 }}>
-                  <ErrorState
-                    title="Project View Error"
-                    description="Failed to load project detail view. Please try refreshing the page."
-                    onRetry={() => window.location.reload()}
-                    actionLabel="Refresh Page"
-                  />
-                </Box>
-              }
-            >
-              <ProjectDetailView />
-            </ErrorBoundary>
-          } />
-          <Route path="/task-groups" element={<TaskGroups />} />
-          <Route path="/task-groups/:id" element={
-            <ErrorBoundary
-              fallback={
-                <Box sx={{ p: 4 }}>
-                  <ErrorState
-                    title="Task Group View Error"
-                    description="Failed to load task group detail view. Please try refreshing the page."
-                    onRetry={() => window.location.reload()}
-                    actionLabel="Refresh Page"
-                  />
-                </Box>
-              }
-            >
-              <TaskGroupDetailView />
-            </ErrorBoundary>
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {children}
       </Box>
     </Box>
   );
@@ -119,15 +73,118 @@ function App() {
     <ThemeProvider defaultMode="light">
       <Router>
         <Routes>
-          {/* Login route - completely separate from sidebar layout */}
-          <Route path="/login" element={<Login />} />
-
-          {/* All other routes use the main layout with sidebar */}
-          <Route path="*" element={
-            <SidebarProvider>
-              <MainLayout />
-            </SidebarProvider>
+          {/* Default route - redirect to login if not authenticated, otherwise to dashboard */}
+          <Route path="/" element={
+            isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
           } />
+
+          {/* Login route - redirect to dashboard if already authenticated */}
+          <Route path="/login" element={
+            isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Login />
+          } />
+
+          {/* Protected routes with sidebar layout */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <SidebarProvider>
+                <MainLayout>
+                  <HomePage />
+                </MainLayout>
+              </SidebarProvider>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/project" element={
+            <ProtectedRoute>
+              <SidebarProvider>
+                <MainLayout>
+                  <Projects />
+                </MainLayout>
+              </SidebarProvider>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/project/:id" element={
+            <ProtectedRoute>
+              <SidebarProvider>
+                <MainLayout>
+                  <ErrorBoundary
+                    fallback={
+                      <Box sx={{ p: 4 }}>
+                        <ErrorState
+                          title="Project View Error"
+                          description="Failed to load project detail view. Please try refreshing the page."
+                          onRetry={() => window.location.reload()}
+                          actionLabel="Refresh Page"
+                        />
+                      </Box>
+                    }
+                  >
+                    <ProjectDetailView />
+                  </ErrorBoundary>
+                </MainLayout>
+              </SidebarProvider>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/task-groups" element={
+            <ProtectedRoute>
+              <SidebarProvider>
+                <MainLayout>
+                  <TaskGroups />
+                </MainLayout>
+              </SidebarProvider>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/task-groups/:id" element={
+            <ProtectedRoute>
+              <SidebarProvider>
+                <MainLayout>
+                  <ErrorBoundary
+                    fallback={
+                      <Box sx={{ p: 4 }}>
+                        <ErrorState
+                          title="Task Group View Error"
+                          description="Failed to load task group detail view. Please try refreshing the page."
+                          onRetry={() => window.location.reload()}
+                          actionLabel="Refresh Page"
+                        />
+                      </Box>
+                    }
+                  >
+                    <TaskGroupDetailView />
+                  </ErrorBoundary>
+                </MainLayout>
+              </SidebarProvider>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/diagram/:id" element={
+            <ProtectedRoute>
+              <SidebarProvider>
+                <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+                  <Sidebar />
+                  <Box
+                    component="main"
+                    sx={{
+                      flexGrow: 1,
+                      width: '100%',
+                      height: '100vh',
+                      margin: 0,
+                      padding: 0,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <Diagram />
+                  </Box>
+                </Box>
+              </SidebarProvider>
+            </ProtectedRoute>
+          } />
+
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
