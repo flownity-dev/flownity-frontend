@@ -113,6 +113,22 @@ export interface Project {
 }
 
 /**
+ * Backend API project response interface
+ */
+export interface ApiProjectResponse {
+  id: number;
+  project_title: string;
+  project_description: string;
+  created_by: number;
+  status_id: number | null;
+  due_from: string | null;
+  due_to: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+/**
  * Extended project interface for detailed project view
  */
 export interface ProjectDetailData {
@@ -122,9 +138,10 @@ export interface ProjectDetailData {
   status: ProjectStatus;
   startDate: Date;
   endDate: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-  owner?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: number;
+  statusId: number | null;
 }
 
 /**
@@ -249,7 +266,7 @@ export interface CreateProjectFormData {
 export interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (projectData: CreateProjectFormData) => void;
+  onSubmit?: (projectData: CreateProjectFormData) => void;
 }
 
 /**
