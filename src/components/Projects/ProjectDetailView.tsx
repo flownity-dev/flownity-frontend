@@ -6,7 +6,8 @@ import { ProjectDetailHeader } from './ProjectDetailHeader';
 import { ProjectDetailTabs } from './ProjectDetailTabs';
 import { ProjectDetailContent } from './ProjectDetailContent';
 import ProjectDetailSidebar from './ProjectDetailSidebar';
-import { sampleProjectsDetail } from './sampleData';
+import { getProjectById } from '../../services/projectService';
+
 import type { 
   ProjectDetailViewProps, 
   ProjectDetailData, 
@@ -54,21 +55,19 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ className 
           return;
         }
 
-        // Simulate API call delay for realistic loading state
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Look up project in sample data
-        const foundProject = sampleProjectsDetail.find(p => p.id === id);
-        
-        if (!foundProject) {
-          setNotFound(true);
-          return;
-        }
-
+        // Call the real API to get project by ID
+        const foundProject = await getProjectById(id);
         setProject(foundProject);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load project';
-        setError(errorMessage);
+        
+        // Check if it's a "not found" error
+        if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+          setNotFound(true);
+        } else {
+          setError(errorMessage);
+        }
+        
         console.error('Error loading project:', err);
       } finally {
         setLoading(false);
@@ -118,19 +117,19 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ className 
           return;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const foundProject = sampleProjectsDetail.find(p => p.id === id);
-        
-        if (!foundProject) {
-          setNotFound(true);
-          return;
-        }
-
+        // Call the real API to get project by ID
+        const foundProject = await getProjectById(id);
         setProject(foundProject);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load project';
-        setError(errorMessage);
+        
+        // Check if it's a "not found" error
+        if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+          setNotFound(true);
+        } else {
+          setError(errorMessage);
+        }
+        
         console.error('Error loading project:', err);
       } finally {
         setLoading(false);

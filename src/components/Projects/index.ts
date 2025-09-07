@@ -28,5 +28,4 @@ export type {
     ProjectDetailSidebarProps
 } from '../../types/common.types';
 
-// Sample data
-export { sampleProjects, sampleProjectsDetail } from './sampleData';
+// Sample data exports removed - using real API data now

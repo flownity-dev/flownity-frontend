@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Table,
     TableBody,
@@ -21,7 +22,7 @@ import type { ProjectsTableProps, ProjectStatus, Project } from '../../types/com
 import { LoadingState, EmptyState, ErrorState } from '../Common';
 
 const ProjectsTable: React.FC<ProjectsTableProps> = ({ 
-    projects, 
+    projects = [], 
     loading = false, 
     error = null, 
     onRetry,
@@ -29,6 +30,14 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
     isTablet = false,
 }) => {
     const theme = useTheme();
+    const navigate = useNavigate();
+
+    /**
+     * Handle project click to navigate to detail view
+     */
+    const handleProjectClick = (projectId: string) => {
+        navigate(`/project/${projectId}`);
+    };
     /**
      * Get appropriate color for project status chip
      */
@@ -74,12 +83,15 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
      */
     const MobileProjectCard: React.FC<{ project: Project }> = ({ project }) => (
         <Card 
+            onClick={() => handleProjectClick(project.id)}
             sx={{ 
                 mb: 2,
+                cursor: 'pointer',
                 '&:hover': {
                     boxShadow: theme.shadows[4],
+                    transform: 'translateY(-1px)',
                 },
-                transition: theme.transitions.create(['box-shadow'], {
+                transition: theme.transitions.create(['box-shadow', 'transform'], {
                     duration: theme.transitions.duration.short,
                 }),
             }}
@@ -149,8 +161,8 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
         );
     }
 
-    // Handle empty state
-    if (projects.length === 0) {
+    // Handle empty state or invalid projects data
+    if (!projects || !Array.isArray(projects) || projects.length === 0) {
         return (
             <Paper sx={{ boxShadow: 1, borderRadius: 1 }}>
                 <EmptyState
@@ -211,7 +223,9 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                     {projects.map((project) => (
                         <TableRow
                             key={project.id}
+                            onClick={() => handleProjectClick(project.id)}
                             sx={{
+                                cursor: 'pointer',
                                 '&:last-child td, &:last-child th': { border: 0 },
                                 '&:hover': {
                                     backgroundColor: 'action.hover',

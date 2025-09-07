@@ -141,24 +141,22 @@ export const ProjectDetailHeader: React.FC<ProjectDetailHeaderProps> = ({
                             wordBreak: 'break-word',
                         }}
                     >
-                        {project.description}
+                        {project.description || 'No description provided'}
                     </Typography>
 
-                    {project.owner && (
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                mt: 1,
-                                fontSize: {
-                                    xs: '0.75rem',
-                                    sm: '0.875rem',
-                                },
-                            }}
-                        >
-                            Owner: {project.owner}
-                        </Typography>
-                    )}
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                            mt: 1,
+                            fontSize: {
+                                xs: '0.75rem',
+                                sm: '0.875rem',
+                            },
+                        }}
+                    >
+                        Created by: User {project.createdBy}
+                    </Typography>
                 </Box>
             </Box>
 
