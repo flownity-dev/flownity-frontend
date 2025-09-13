@@ -2,17 +2,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Box, useTheme } from '@mui/material';
 import './App.css';
 import { ThemeProvider } from './theme/ThemeProvider';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 import { Sidebar } from './components/Sidebar';
 import { ErrorBoundary, ErrorState } from './components/Common';
 import Diagram from './components/Diagram';
 import Login from './components/Login';
+import OAuthCallback from './components/OAuthCallback';
 import HomePage from './components/Homepage';
 import { Projects } from './components/Projects';
 import { ProjectDetailView } from './components/Projects/ProjectDetailView';
 import { TaskGroups, TaskGroupDetailView } from './components/TaskGroups';
 import ProtectedRoute from './components/ProtectedRoute';
-import { isAuthenticated } from './utils/localStorage';
 
 // Main layout component that uses sidebar context - for authenticated routes only
 function MainLayout({ children }: { children: React.ReactNode }) {
@@ -68,20 +69,31 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Component to handle default route redirection
+function DefaultRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return null; // Let AuthProvider handle loading state
+  }
+  
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
     <ThemeProvider defaultMode="light">
-      <Router>
-        <Routes>
-          {/* Default route - redirect to login if not authenticated, otherwise to dashboard */}
-          <Route path="/" element={
-            isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
-          } />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Default route - redirect based on auth status */}
+            <Route path="/" element={<DefaultRoute />} />
 
-          {/* Login route - redirect to dashboard if already authenticated */}
-          <Route path="/login" element={
-            isAuthenticated() ? <Navigate to="/dashboard" replace /> : <Login />
-          } />
+            {/* Login route */}
+            <Route path="/login" element={<Login />} />
+
+            {/* OAuth callback route */}
+            <Route path="/auth/callback" element={<OAuthCallback />} />
 
           {/* Protected routes with sidebar layout */}
           <Route path="/dashboard" element={
@@ -183,10 +195,11 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Catch all - redirect to login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+            {/* Catch all - redirect to login */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

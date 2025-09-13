@@ -81,7 +81,7 @@ export const ProjectTaskGroups: React.FC<ProjectTaskGroupsProps> = ({ project })
                                 '&:hover': {
                                     elevation: 4,
                                     transform: 'translateY(-4px)',
-                                    boxShadow: (theme) => theme.shadows[4],
+                                    boxShadow: (theme: any) => theme.shadows[4],
                                 },
                                 borderRadius: 2,
                                 backgroundColor: 'background.paper',

@@ -206,7 +206,7 @@ const FlowWithDialog: React.FC = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodeClick={(_, node) => {
+          onNodeClick={(_: any, node: any) => {
             const user = users.find((u) => u.id === node.id);
             if (user) setSelectedUser(user);
           }}
@@ -236,7 +236,7 @@ const FlowWithDialog: React.FC = () => {
               labelId="layout-select-label"
               value={layoutDirection}
               label="Layout"
-              onChange={(e) =>
+              onChange={(e: any) =>
                 setLayoutDirection(e.target.value as "TB" | "LR" | "BT" | "RL")
               }
             >
