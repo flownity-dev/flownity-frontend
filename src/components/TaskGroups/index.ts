@@ -14,12 +14,4 @@ export { default as TaskGroupDetailView } from './TaskGroupDetailView';
 export { default as TaskGroupDetailHeader } from './TaskGroupDetailHeader';
 export { default as TasksPagination } from './TasksPagination';
 
-// Sample data
-export { 
-    sampleTaskGroups, 
-    sampleTasks, 
-    sampleTaskGroupsDetail,
-    getTasksByTaskGroupId,
-    getTaskGroupDetailById,
-    getPaginatedTasks
-} from './sampleData';
+// Sample data exports removed - now using API services
