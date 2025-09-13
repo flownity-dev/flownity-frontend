@@ -64,8 +64,6 @@ const Login: React.FC = () => {
 
 				// Store authentication data using context
 				login(token, userData);
-				// Redirect to dashboard
-				window.location.href = "/dashboard";
 
 				// Cleanup listener
 				window.removeEventListener("message", handleMessage);
