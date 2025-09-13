@@ -1,4 +1,5 @@
 import React from "react";
+import { ApiStatus } from "../utils";
 
 /**
  * Navigation item interface for sidebar navigation
@@ -99,7 +100,7 @@ export interface SidebarFooterProps {
 /**
  * Project status type union for all possible project states
  */
-export type ProjectStatus = "active" | "completed" | "on-hold" | "archived";
+export type ProjectStatus = ApiStatus;
 
 /**
  * Project interface for project data structure
@@ -283,7 +284,7 @@ export const PRIORITY_OPTIONS: PriorityOption[] = [
 /**
  * Task group status type union for all possible task group states
  */
-export type TaskGroupStatus = "active" | "archived";
+export type TaskGroupStatus = ApiStatus;
 
 /**
  * Task group interface for task group data structure

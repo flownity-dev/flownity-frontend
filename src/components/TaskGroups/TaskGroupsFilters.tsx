@@ -42,7 +42,7 @@ const TaskGroupsFilters: React.FC<TaskGroupsFiltersProps> = ({
             variant={activeFilter === 'archived' ? 'contained' : 'outlined'}
             onClick={() => handleFilterChange('archived')}
           >
-            Archive
+            Archived
           </Button>
         </ButtonGroup>
 

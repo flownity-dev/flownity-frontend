@@ -34,15 +34,51 @@ const Login: React.FC = () => {
   }, [isAuthenticated, isLoading, navigate]);
 
   const handleGitHubLogin = () => {
-    setError(null);
-    setIsAuthenticating('github');
-    try {
-      initiateGitHubAuth();
-    } catch (err) {
-      setError('Failed to initiate GitHub authentication');
-      setIsAuthenticating(null);
-    }
+    const authWindow = window.open(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/github`,
+      "githubLogin",
+      "width=600,height=700"
+    );
+
+    const allowedOrigins = [import.meta.env.VITE_BACKEND_URL]; // adjust if needed
+
+    const handleMessage = (event: MessageEvent) => {
+      // Only accept messages from allowed origins
+      if (!allowedOrigins.includes(event.origin)) return;
+
+      if (event.data?.type === "oauth_success") {
+        const { token } = event.data;
+        console.log("Received token:", token);
+
+        // Save token in localStorage before redirect
+        localStorage.setItem("authToken", token);
+
+        // Close the popup after success
+        authWindow?.close();
+
+        // Redirect to dashboard
+        window.location.href = "/dashboard";
+
+        // Cleanup listener
+        window.removeEventListener("message", handleMessage);
+      }
+
+      if (event.data?.type === "oauth_error") {
+        console.error("OAuth error:", event.data.message);
+        setError(event.data.message || "Authentication failed");
+        setIsAuthenticating(null);
+
+        // Close the popup after error
+        authWindow?.close();
+        window.removeEventListener("message", handleMessage);
+      }
+    };
+
+
+    // Add listener **once**, outside of any immediate removal
+    window.addEventListener("message", handleMessage);
   };
+
 
   const handleGoogleLogin = () => {
     setError(null);

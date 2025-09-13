@@ -49,14 +49,14 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
 		status: ProjectStatus
 	): "success" | "info" | "warning" | "default" => {
 		switch (status) {
-			case "active":
+			case "done":
 				return "success";
-			case "completed":
+			case "in-progress":
+			case "in-review":
 				return "info";
 			case "on-hold":
+			case "blocked":
 				return "warning";
-			case "archived":
-				return "default";
 			default:
 				return "default";
 		}
