@@ -220,7 +220,7 @@ const HomePage: React.FC = () => {
                             fullWidth
                             margin="normal"
                             value={projectTitle}
-                            onChange={(e) => setProjectTitle(e.target.value)}
+                            onChange={(e: any) => setProjectTitle(e.target.value)}
                         />
                         <TextField
                             label="Project Description"
@@ -229,7 +229,7 @@ const HomePage: React.FC = () => {
                             rows={4}
                             margin="normal"
                             value={projectDescription}
-                            onChange={(e) => setProjectDescription(e.target.value)}
+                            onChange={(e: any) => setProjectDescription(e.target.value)}
                         />
                         <TextField
                             label="Due From"
@@ -238,7 +238,7 @@ const HomePage: React.FC = () => {
                             margin="normal"
                             InputLabelProps={{ shrink: true }}
                             value={dueFrom}
-                            onChange={(e) => setDueFrom(e.target.value)}
+                            onChange={(e: any) => setDueFrom(e.target.value)}
                         />
                         <TextField
                             label="Due To"
@@ -247,7 +247,7 @@ const HomePage: React.FC = () => {
                             margin="normal"
                             InputLabelProps={{ shrink: true }}
                             value={dueTo}
-                            onChange={(e) => setDueTo(e.target.value)}
+                            onChange={(e: any) => setDueTo(e.target.value)}
                         />
                     </DialogContent>
                     <DialogActions>

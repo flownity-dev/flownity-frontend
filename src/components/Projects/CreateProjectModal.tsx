@@ -14,6 +14,8 @@ import {
   useTheme,
   useMediaQuery,
   IconButton,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import type { SelectChangeEvent } from '@mui/material';
@@ -23,6 +25,7 @@ import type {
   ProjectPriority
 } from '../../types/common.types';
 import { PRIORITY_OPTIONS } from '../../types/common.types';
+import { createProject } from '../../services/projectService';
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   open,
@@ -39,6 +42,10 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     description: '',
     priority: 'medium',
   });
+
+  // Loading and error state management
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Validation state management
   const [errors, setErrors] = useState<{
@@ -122,7 +129,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Mark all fields as touched for validation display
     setTouched({
       name: true,
@@ -130,17 +137,67 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
     // Validate entire form before submission
     if (validateForm()) {
-      // Log form data to console as required
-      console.log('Creating project:', formData);
-      onSubmit(formData);
-      handleReset();
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Validate form data before API call
+        if (!formData.name || formData.name.trim().length === 0) {
+          throw new Error('Project name is required');
+        }
+
+        if (formData.name.trim().length > 100) {
+          throw new Error('Project name must be less than 100 characters');
+        }
+
+        if (formData.description && formData.description.length > 500) {
+          throw new Error('Project description must be less than 500 characters');
+        }
+
+        // Call the API to create the project
+        await createProject(formData);
+
+        // Call success callback if provided
+        if (onSubmit) {
+          await onSubmit(formData);
+        }
+
+        // Reset form only on successful submission
+        handleReset();
+        // Close modal
+        onClose();
+      } catch (err) {
+        
+        // Enhanced error handling for different error types
+        let errorMessage = 'Failed to create project';
+
+        if (err instanceof Error) {
+          if (err.message.includes('Network Error') || err.message.includes('timeout')) {
+            errorMessage = 'Network error: Please check your connection and try again';
+          } else {
+            errorMessage = err.message;
+          }
+        } else if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err && typeof err === 'object' && 'message' in err) {
+          errorMessage = String(err.message);
+        }
+
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      console.log('Form validation failed:', errors);
     }
   };
 
   // Handle modal close and form reset
   const handleClose = () => {
-    handleReset();
-    onClose();
+    if (!loading) {
+      handleReset();
+      onClose();
+    }
   };
 
   // Handle escape key press
@@ -159,6 +216,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     });
     setErrors({});
     setTouched({});
+    setError(null);
   };
 
   // Focus management - focus first field when modal opens
@@ -211,11 +269,15 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         <IconButton
           aria-label="close dialog"
           onClick={handleClose}
+          disabled={loading}
           size="small"
           sx={{
             color: theme.palette.text.secondary,
             '&:hover': {
               backgroundColor: theme.palette.action.hover,
+            },
+            '&:disabled': {
+              color: theme.palette.action.disabled,
             },
           }}
         >
@@ -230,6 +292,17 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           color: theme.palette.text.primary,
         }}
       >
+        {/* Error Display */}
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 2 }}
+            onClose={() => setError(null)}
+          >
+            {error}
+          </Alert>
+        )}
+
         <Box
           component="form"
           role="form"
@@ -252,6 +325,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             required
             fullWidth
             variant="outlined"
+            disabled={loading}
             error={touched.name && !!errors.name}
             helperText={touched.name && errors.name}
             aria-describedby={touched.name && errors.name ? 'name-error-text' : undefined}
@@ -287,6 +361,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             rows={4}
             fullWidth
             variant="outlined"
+            disabled={loading}
             inputProps={{
               'aria-label': 'Project description (optional)',
             }}
@@ -337,6 +412,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               value={formData.priority}
               onChange={handlePriorityChange}
               label="Priority"
+              disabled={loading}
               aria-label="Project priority"
               inputProps={{
                 'aria-describedby': 'priority-helper-text',
@@ -381,6 +457,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           onClick={handleClose}
           color="inherit"
           variant="outlined"
+          disabled={loading}
           fullWidth={isMobile}
           aria-label="Discard project creation"
           sx={{
@@ -394,6 +471,11 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               outline: `2px solid ${theme.palette.primary.main}`,
               outlineOffset: '2px',
             },
+            '&:disabled': {
+              backgroundColor: theme.palette.action.disabledBackground,
+              color: theme.palette.action.disabled,
+              borderColor: theme.palette.action.disabled,
+            },
           }}
         >
           Discard
@@ -402,9 +484,10 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           onClick={handleSubmit}
           color="primary"
           variant="contained"
-          disabled={!formData.name.trim() || !!errors.name}
+          disabled={!formData.name.trim() || !!errors.name || loading}
           fullWidth={isMobile}
           aria-label="Create new project"
+          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : undefined}
           sx={{
             backgroundColor: theme.palette.primary.main,
             color: theme.palette.primary.contrastText,
@@ -421,7 +504,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             },
           }}
         >
-          Create Project
+          {loading ? 'Creating...' : 'Create Project'}
         </Button>
       </DialogActions>
     </Dialog>

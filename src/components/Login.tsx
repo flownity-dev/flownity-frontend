@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -8,7 +8,8 @@ import {
   Button,
   Stack,
   Divider,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 import { GitHub, Google } from '@mui/icons-material';
@@ -16,91 +17,64 @@ import {
   initiateGitHubAuth,
   initiateGoogleAuth
 } from '../services/authService';
-import { storeAuthData } from '../utils/localStorage';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const theme = useMuiTheme();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [error, setError] = React.useState<string | null>(null);
-  const [isRetrying, setIsRetrying] = React.useState<boolean>(false);
+  const { isAuthenticated, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleOAuthCallback = () => {
-      // Get the full URL to parse token and success parameters
-      const urlString = window.location.search;
-      console.log('Full URL search params:', urlString);
-
-      // Parse manually to handle token=<token> format
-      const tokenMatch = urlString.match(/token=([^&]+)/);
-      const successMatch = urlString.match(/success=([^&]+)/);
-      const errorMatch = urlString.match(/error=([^&]+)/);
-
-      const token = tokenMatch ? tokenMatch[1] : null;
-      const success = successMatch ? successMatch[1] : null;
-      const error = errorMatch ? errorMatch[1] : null;
-
-      console.log('Parsed OAuth callback params:', { token, success, error });
-
-      // Handle OAuth errors first
-      if (error || success === 'false') {
-        const errorMessage = error === 'access_denied'
-          ? 'You denied access to the application'
-          : error
-            ? `OAuth error: ${error}`
-            : 'Authentication failed';
-        setError(errorMessage);
-        // Clean up URL parameters
-        window.history.replaceState({}, document.title, '/login');
-        return;
-      }
-
-      // Handle successful callback with token
-      if (token && success === 'true') {
-        try {
-          console.log('Storing token:', token);
-
-          // Store the token directly from the callback
-          const userData = { authenticated: true, timestamp: Date.now() };
-          storeAuthData(token, userData);
-
-          // Verify token was stored
-          const storedToken = localStorage.getItem('authToken');
-          console.log('Token stored successfully. Verification:', storedToken === token);
-
-          // Clean up URL parameters before navigation
-          window.history.replaceState({}, document.title, '/login');
-
-          // Navigate to dashboard
-          navigate('/dashboard');
-        } catch (err) {
-          console.error('Token storage error:', err);
-          setError('Failed to store authentication data');
-          window.history.replaceState({}, document.title, '/login');
-        }
-      }
-    };
-
-    handleOAuthCallback();
-  }, [searchParams, navigate]);
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   const handleGitHubLogin = () => {
-    setError(null); // Clear any existing errors
-    initiateGitHubAuth();
+    setError(null);
+    setIsAuthenticating('github');
+    try {
+      initiateGitHubAuth();
+    } catch (err) {
+      setError('Failed to initiate GitHub authentication');
+      setIsAuthenticating(null);
+    }
   };
 
   const handleGoogleLogin = () => {
-    setError(null); // Clear any existing errors
-    initiateGoogleAuth();
+    setError(null);
+    setIsAuthenticating('google');
+    try {
+      initiateGoogleAuth();
+    } catch (err) {
+      setError('Failed to initiate Google authentication');
+      setIsAuthenticating(null);
+    }
   };
 
   const handleRetry = () => {
     setError(null);
-    setIsRetrying(true);
-    // Retry the last attempted authentication
-    // Since we can't determine which provider was used, show both options
-    setTimeout(() => setIsRetrying(false), 1000);
+    setIsAuthenticating(null);
   };
+
+  // Show loading spinner while checking authentication status
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -181,16 +155,13 @@ const Login: React.FC = () => {
               severity="error"
               sx={{ mb: 2 }}
               action={
-                error.includes('Network error') || error.includes('timeout') ? (
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={handleRetry}
-                    disabled={isRetrying}
-                  >
-                    {isRetrying ? 'Retrying...' : 'Retry'}
-                  </Button>
-                ) : null
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={handleRetry}
+                >
+                  Try Again
+                </Button>
               }
             >
               {error}
@@ -201,8 +172,9 @@ const Login: React.FC = () => {
             <Button
               variant="contained"
               size="large"
-              startIcon={<GitHub />}
+              startIcon={isAuthenticating === 'github' ? <CircularProgress size={20} color="inherit" /> : <GitHub />}
               onClick={handleGitHubLogin}
+              disabled={!!isAuthenticating}
               sx={{
                 py: 1.5,
                 fontSize: { xs: '0.9rem', sm: '1rem' },
@@ -214,12 +186,16 @@ const Login: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(36, 41, 46, 0.3)'
                 },
+                '&:disabled': {
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                },
                 transition: 'all 0.3s ease',
                 textTransform: 'none'
               }}
               fullWidth
             >
-              Continue with GitHub
+              {isAuthenticating === 'github' ? 'Connecting...' : 'Continue with GitHub'}
             </Button>
 
             <Divider sx={{ my: 2 }}>
@@ -231,8 +207,9 @@ const Login: React.FC = () => {
             <Button
               variant="contained"
               size="large"
-              startIcon={<Google />}
+              startIcon={isAuthenticating === 'google' ? <CircularProgress size={20} color="inherit" /> : <Google />}
               onClick={handleGoogleLogin}
+              disabled={!!isAuthenticating}
               sx={{
                 py: 1.5,
                 fontSize: { xs: '0.9rem', sm: '1rem' },
@@ -244,12 +221,16 @@ const Login: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 25px rgba(66, 133, 244, 0.3)'
                 },
+                '&:disabled': {
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                },
                 transition: 'all 0.3s ease',
                 textTransform: 'none'
               }}
               fullWidth
             >
-              Continue with Google
+              {isAuthenticating === 'google' ? 'Connecting...' : 'Continue with Google'}
             </Button>
           </Stack>
 
