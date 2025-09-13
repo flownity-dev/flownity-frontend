@@ -1,410 +1,413 @@
-import React from 'react';
+import React from "react";
 
 /**
  * Navigation item interface for sidebar navigation
  */
 export interface NavigationItem {
-  id: string;
-  label: string;
-  icon: React.ComponentType;
-  path: string;
-  isActive?: boolean;
+	id: string;
+	label: string;
+	icon: React.ComponentType;
+	path: string;
+	isActive?: boolean;
 }
 
 /**
  * Sidebar state interface for managing collapse/expand state
  */
 export interface SidebarState {
-  isCollapsed: boolean;
-  isMobile: boolean;
-  prefersReducedMotion: boolean;
+	isCollapsed: boolean;
+	isMobile: boolean;
+	prefersReducedMotion: boolean;
 }
 
 /**
  * Context type for sidebar state management
  */
 export interface SidebarContextType {
-  sidebarState: SidebarState;
-  toggleSidebar: () => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
+	sidebarState: SidebarState;
+	toggleSidebar: () => void;
+	setSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 /**
  * User profile interface for sidebar footer
  */
 export interface UserProfile {
-  name: string;
-  email: string;
-  avatar?: string;
+	name: string;
+	email: string;
+	avatar?: string;
 }
 
 /**
  * Theme-related interfaces for sidebar styling
  */
 export interface SidebarTheme {
-  collapsed: {
-    width: number;
-  };
-  expanded: {
-    width: number;
-  };
-  transition: {
-    duration: number;
-    easing: string;
-  };
+	collapsed: {
+		width: number;
+	};
+	expanded: {
+		width: number;
+	};
+	transition: {
+		duration: number;
+		easing: string;
+	};
 }
 
 /**
  * Navigation configuration type for defining sidebar navigation structure
  */
 export interface NavigationConfig {
-  items: NavigationItem[];
-  userProfile: UserProfile;
-  theme: SidebarTheme;
+	items: NavigationItem[];
+	userProfile: UserProfile;
+	theme: SidebarTheme;
 }
 
 /**
  * Sidebar component props interface
  */
 export interface SidebarProps {
-  navigationItems?: NavigationItem[];
-  userProfile?: UserProfile;
+	navigationItems?: NavigationItem[];
+	userProfile?: UserProfile;
 }
 
 /**
  * Individual sidebar navigation item props
  */
 export interface SidebarNavItemProps {
-  item: NavigationItem;
-  isCollapsed: boolean;
-  onClick: (path: string) => void;
+	item: NavigationItem;
+	isCollapsed: boolean;
+	onClick: (path: string) => void;
 }
 
 /**
  * Sidebar header component props
  */
 export interface SidebarHeaderProps {
-  isCollapsed: boolean;
-  onToggle: () => void;
+	isCollapsed: boolean;
+	onToggle: () => void;
 }
 
 /**
  * Sidebar footer component props
  */
 export interface SidebarFooterProps {
-  userProfile: UserProfile;
-  isCollapsed: boolean;
+	userProfile: UserProfile;
+	isCollapsed: boolean;
 }
 
 /**
  * Project status type union for all possible project states
  */
-export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'archived';
+export type ProjectStatus = "active" | "completed" | "on-hold" | "archived";
 
 /**
  * Project interface for project data structure
  */
 export interface Project {
-  id: string;
-  name: string;
-  startDate: Date;
-  endDate: Date;
-  status: ProjectStatus;
+	id: string;
+	name: string;
+	startDate: Date | null;
+	endDate: Date | null;
+	status: ProjectStatus;
+	deleted_at: string | null;
 }
 
 /**
  * Backend API project response interface
  */
 export interface ApiProjectResponse {
-  id: number;
-  project_title: string;
-  project_description: string;
-  created_by: number;
-  status_id: number | null;
-  due_from: string | null;
-  due_to: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
+	id: number;
+	project_title: string;
+	project_description: string;
+	created_by: number;
+	status_id: number | null;
+	due_from: string | null;
+	due_to: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
 }
 
 /**
  * Extended project interface for detailed project view
  */
 export interface ProjectDetailData {
-  id: string;
-  name: string;
-  description: string;
-  status: ProjectStatus;
-  startDate: Date;
-  endDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: number;
-  statusId: number | null;
+	id: string;
+	name: string;
+	description: string;
+	status: ProjectStatus;
+	startDate: Date | null;
+	endDate: Date | null;
+	createdAt: Date;
+	updatedAt: Date;
+	createdBy: number;
+	statusId: number | null;
+	deleted_at: string | null;
 }
 
 /**
  * Tab type for project detail navigation
  */
-export type ProjectDetailTab = 'task-groups' | 'members';
+export type ProjectDetailTab = "task-groups" | "members";
 
 /**
  * Props interface for ProjectDetailHeader component
  */
 export interface ProjectDetailHeaderProps {
-  project: ProjectDetailData;
-  onToggleSidebar: () => void;
-  isSidebarCollapsed: boolean;
+	project: ProjectDetailData;
+	onToggleSidebar: () => void;
+	isSidebarCollapsed: boolean;
 }
 
 /**
  * Props interface for ProjectDetailTabs component
  */
 export interface ProjectDetailTabsProps {
-  activeTab: ProjectDetailTab;
-  onTabChange: (tab: ProjectDetailTab) => void;
+	activeTab: ProjectDetailTab;
+	onTabChange: (tab: ProjectDetailTab) => void;
 }
 
 /**
  * Props interface for ProjectDetailContent component
  */
 export interface ProjectDetailContentProps {
-  activeTab: ProjectDetailTab;
-  project: ProjectDetailData;
+	activeTab: ProjectDetailTab;
+	project: ProjectDetailData;
 }
 
 /**
  * Props interface for ProjectDetailSidebar component
  */
 export interface ProjectDetailSidebarProps {
-  isCollapsed: boolean;
-  onToggle: () => void;
-  project: ProjectDetailData;
+	isCollapsed: boolean;
+	onToggle: () => void;
+	project: ProjectDetailData;
 }
 
 /**
  * Props interface for main ProjectDetailView component
  */
 export interface ProjectDetailViewProps {
-  className?: string;
+	className?: string;
 }
 
 /**
  * Projects component props interface
  */
 export interface ProjectsProps {
-  // No props needed - self-contained component
-  className?: string;
+	// No props needed - self-contained component
+	className?: string;
 }
 
 /**
  * Projects header component props interface
  */
 export interface ProjectsHeaderProps {
-  // No props needed - displays static title
-  className?: string;
+	// No props needed - displays static title
+	className?: string;
 }
 
 /**
  * Projects filters component props interface
  */
 export interface ProjectsFiltersProps {
-  activeFilter: 'all' | 'archived';
-  onFilterChange: (filter: 'all' | 'archived') => void;
-  onNewProject: () => void;
-  isMobile?: boolean;
+	activeFilter: "all" | "archived";
+	onFilterChange: (filter: "all" | "archived") => void;
+	onNewProject: () => void;
+	isMobile?: boolean;
 }
 
 /**
  * Projects table component props interface
  */
 export interface ProjectsTableProps {
-  projects: Project[];
-  loading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
-  isMobile?: boolean;
-  isTablet?: boolean;
+	projects: Project[];
+	loading?: boolean;
+	error?: string | null;
+	onRetry?: () => void;
+	isMobile?: boolean;
+	isTablet?: boolean;
 }
 
 /**
  * Projects pagination component props interface
  */
 export interface ProjectsPaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  isMobile?: boolean;
+	currentPage: number;
+	totalPages: number;
+	onPageChange: (page: number) => void;
+	isMobile?: boolean;
 }
 
 /**
  * Priority type for project creation
  */
-export type ProjectPriority = 'low' | 'medium' | 'high';
+export type ProjectPriority = "low" | "medium" | "high";
 
 /**
  * Priority option interface for select dropdown
  */
 export interface PriorityOption {
-  value: ProjectPriority;
-  label: string;
+	value: ProjectPriority;
+	label: string;
 }
 
 /**
  * Form data interface for creating new projects
  */
 export interface CreateProjectFormData {
-  name: string;
-  description?: string;
-  priority: ProjectPriority;
+	name: string;
+	description?: string;
+	priority: ProjectPriority;
 }
 
 /**
  * Create project modal component props interface
  */
 export interface CreateProjectModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit?: (projectData: CreateProjectFormData) => void;
+	open: boolean;
+	onClose: () => void;
+	onSubmit?: (projectData: CreateProjectFormData) => void;
 }
 
 /**
  * Priority options constants for project creation dropdown
  */
 export const PRIORITY_OPTIONS: PriorityOption[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' }
+	{ value: "low", label: "Low" },
+	{ value: "medium", label: "Medium" },
+	{ value: "high", label: "High" },
 ];
 
 /**
  * Task group status type union for all possible task group states
  */
-export type TaskGroupStatus = 'active' | 'archived';
+export type TaskGroupStatus = "active" | "archived";
 
 /**
  * Task group interface for task group data structure
  */
 export interface TaskGroup {
-  id: string;
-  name: string;
-  projectId: string;
-  projectName: string;
-  taskCount: number;
-  status: TaskGroupStatus;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	name: string;
+	projectId: string;
+	projectName: string;
+	taskCount: number;
+	status: TaskGroupStatus;
+	createdAt: Date;
+	updatedAt: Date;
+	deleted_at: string | null;
 }
 
 /**
  * Form data interface for creating new task groups
  */
 export interface CreateTaskGroupFormData {
-  name: string;
-  description?: string;
+	task_group_title: string;
+	description?: string;
 }
 
 /**
  * Task groups filters component props interface
  */
 export interface TaskGroupsFiltersProps {
-  activeFilter: 'all' | 'archived';
-  onFilterChange: (filter: 'all' | 'archived') => void;
-  onNewTaskGroup: () => void;
-  isMobile?: boolean;
+	activeFilter: "all" | "archived";
+	onFilterChange: (filter: "all" | "archived") => void;
+	onNewTaskGroup: () => void;
+	isMobile?: boolean;
 }
 
 /**
  * Task groups table component props interface
  */
 export interface TaskGroupsTableProps {
-  taskGroups: TaskGroup[];
-  loading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
-  isMobile?: boolean;
-  isTablet?: boolean;
+	taskGroups: TaskGroup[];
+	loading?: boolean;
+	error?: string | null;
+	onRetry?: () => void;
+	isMobile?: boolean;
+	isTablet?: boolean;
 }
 
 /**
  * Task groups pagination component props interface
  */
 export interface TaskGroupsPaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  isMobile?: boolean;
+	currentPage: number;
+	totalPages: number;
+	onPageChange: (page: number) => void;
+	isMobile?: boolean;
 }
 
 /**
  * Create task group modal component props interface
  */
 export interface CreateTaskGroupModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (taskGroupData: CreateTaskGroupFormData) => void;
+	open: boolean;
+	onClose: () => void;
+	onSubmit: (taskGroupData: CreateTaskGroupFormData) => void;
 }
 
 /**
  * Task status type union for all possible task states
  */
-export type TaskStatus = 'new' | 'in-progress' | 'completed' | 'close';
+export type TaskStatus = "new" | "in-progress" | "completed" | "close";
 
 /**
  * Task interface for individual task data structure
  */
 export interface Task {
-  id: string;
-  name: string;
-  deadlineDate: Date;
-  assignee: string;
-  approver: string;
-  status: TaskStatus;
-  taskGroupId: string;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	name: string;
+	deadlineDate: Date;
+	assignee: string;
+	approver: string;
+	status: TaskStatus;
+	taskGroupId: string;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 /**
  * Extended task group interface for detailed task group view
  */
 export interface TaskGroupDetailData extends TaskGroup {
-  description: string;
+	description: string;
 }
 
 /**
  * Tasks table component props interface
  */
 export interface TasksTableProps {
-  tasks: Task[];
-  loading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
-  isMobile?: boolean;
-  isTablet?: boolean;
+	tasks: Task[];
+	loading?: boolean;
+	error?: string | null;
+	onRetry?: () => void;
+	isMobile?: boolean;
+	isTablet?: boolean;
 }
 
 /**
  * Tasks pagination component props interface
  */
 export interface TasksPaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  isMobile?: boolean;
+	currentPage: number;
+	totalPages: number;
+	onPageChange: (page: number) => void;
+	isMobile?: boolean;
 }
 
 /**
  * Task group detail header component props interface
  */
 export interface TaskGroupDetailHeaderProps {
-  taskGroup: TaskGroupDetailData;
+	taskGroup: TaskGroupDetailData;
 }
 
 /**
  * Task group detail view component props interface
  */
 export interface TaskGroupDetailViewProps {
-  className?: string;
+	className?: string;
 }

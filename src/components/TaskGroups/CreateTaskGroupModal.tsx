@@ -28,7 +28,7 @@ const CreateTaskGroupModal: React.FC<CreateTaskGroupModalProps> = ({
 
   // Form state management
   const [formData, setFormData] = useState<CreateTaskGroupFormData>({
-    name: '',
+    task_group_title: '',
     description: '',
   });
 
@@ -44,7 +44,7 @@ const CreateTaskGroupModal: React.FC<CreateTaskGroupModalProps> = ({
   // Validation functions
   const validateField = (field: keyof CreateTaskGroupFormData, value: string): string | undefined => {
     switch (field) {
-      case 'name':
+      case 'task_group_title':
         if (!value.trim()) {
           return 'Task Group name is required';
         }
@@ -61,7 +61,7 @@ const CreateTaskGroupModal: React.FC<CreateTaskGroupModalProps> = ({
     const newErrors: { name?: string } = {};
 
     // Validate name field
-    const nameError = validateField('name', formData.name);
+    const nameError = validateField('task_group_title', formData.task_group_title);
     if (nameError) {
       newErrors.name = nameError;
     }
@@ -138,7 +138,7 @@ const CreateTaskGroupModal: React.FC<CreateTaskGroupModalProps> = ({
   // Reset form data and validation state
   const handleReset = () => {
     setFormData({
-      name: '',
+      task_group_title: '',
       description: '',
     });
     setErrors({});
@@ -230,9 +230,9 @@ const CreateTaskGroupModal: React.FC<CreateTaskGroupModalProps> = ({
             inputRef={nameFieldRef}
             label="Task Group Name"
             placeholder="Task Group XYZ"
-            value={formData.name}
-            onChange={handleInputChange('name')}
-            onBlur={handleFieldBlur('name')}
+            value={formData.task_group_title}
+            onChange={handleInputChange('task_group_title')}
+            onBlur={handleFieldBlur('task_group_title')}
             required
             fullWidth
             variant="outlined"
@@ -330,7 +330,7 @@ const CreateTaskGroupModal: React.FC<CreateTaskGroupModalProps> = ({
           onClick={handleSubmit}
           color="primary"
           variant="contained"
-          disabled={!formData.name.trim() || !!errors.name}
+          disabled={!formData.task_group_title.trim() || !!errors.name}
           fullWidth={isMobile}
           aria-label="Create new task group"
           sx={{

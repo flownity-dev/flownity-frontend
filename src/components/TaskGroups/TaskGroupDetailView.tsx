@@ -5,12 +5,7 @@ import { LoadingState, ErrorState } from '../Common';
 import TaskGroupDetailHeader from './TaskGroupDetailHeader';
 import TasksTable from './TasksTable';
 import TasksPagination from './TasksPagination';
-import {
-    getTaskGroupDetailById,
-    getTasksByTaskGroupId,
-    getPaginatedTasks,
-    getTotalPages
-} from './sampleData';
+import { getTaskGroupById } from '../../services/taskGroupService';
 import type {
     TaskGroupDetailViewProps,
     TaskGroupDetailData,
@@ -49,27 +44,23 @@ const TaskGroupDetailView: React.FC<TaskGroupDetailViewProps> = ({ className }) 
                     throw new Error('Task group ID is required');
                 }
 
-                // Simulate API delay
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Get task group detail data
-                const taskGroupData = getTaskGroupDetailById(id);
-                if (!taskGroupData) {
-                    throw new Error('Task group not found');
-                }
-
-                // Get tasks for this task group
-                const tasks = getTasksByTaskGroupId(id);
-
+                // Get task group detail data from API
+                const taskGroupData = await getTaskGroupById(id);
                 setTaskGroup(taskGroupData);
+
+                // For now, set empty tasks array until tasks API is implemented
+                // TODO: Implement tasks fetching when tasks API is available
+                const tasks: Task[] = [];
                 setAllTasks(tasks);
 
                 // Calculate pagination
-                const totalPagesCount = getTotalPages(tasks.length, ITEMS_PER_PAGE);
+                const totalPagesCount = Math.ceil(tasks.length / ITEMS_PER_PAGE);
                 setTotalPages(totalPagesCount);
 
                 // Set initial page tasks
-                const paginatedTasks = getPaginatedTasks(tasks, 1, ITEMS_PER_PAGE);
+                const startIndex = 0;
+                const endIndex = ITEMS_PER_PAGE;
+                const paginatedTasks = tasks.slice(startIndex, endIndex);
                 setCurrentTasks(paginatedTasks);
                 setCurrentPage(1);
 
@@ -87,7 +78,9 @@ const TaskGroupDetailView: React.FC<TaskGroupDetailViewProps> = ({ className }) 
     // Handle page change
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        const paginatedTasks = getPaginatedTasks(allTasks, page, ITEMS_PER_PAGE);
+        const startIndex = (page - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const paginatedTasks = allTasks.slice(startIndex, endIndex);
         setCurrentTasks(paginatedTasks);
     };
 
@@ -97,12 +90,32 @@ const TaskGroupDetailView: React.FC<TaskGroupDetailViewProps> = ({ className }) 
     };
 
     // Handle retry on error
-    const handleRetry = () => {
-        // Trigger data reload by updating a dependency
-        setError(null);
-        setLoading(true);
-        // Re-trigger the useEffect by changing the key dependency
-        window.location.reload();
+    const handleRetry = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            if (!id) {
+                throw new Error('Task group ID is required');
+            }
+
+            // Retry fetching task group data
+            const taskGroupData = await getTaskGroupById(id);
+            setTaskGroup(taskGroupData);
+
+            // Reset tasks (empty for now until tasks API is implemented)
+            const tasks: Task[] = [];
+            setAllTasks(tasks);
+            setCurrentTasks(tasks.slice(0, ITEMS_PER_PAGE));
+            setTotalPages(Math.ceil(tasks.length / ITEMS_PER_PAGE));
+            setCurrentPage(1);
+
+        } catch (err) {
+            console.error('Error retrying task group data fetch:', err);
+            setError(err instanceof Error ? err.message : 'Failed to load task group data');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Loading state
