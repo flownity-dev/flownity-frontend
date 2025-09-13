@@ -71,7 +71,7 @@ const OAuthCallback: React.FC = () => {
     };
 
     handleCallback();
-  }, [searchParams, login, navigate]);
+  }, [searchParams, navigate]);
 
   const handleRetry = () => {
     navigate('/login', { replace: true });
