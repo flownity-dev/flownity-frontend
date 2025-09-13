@@ -11,67 +11,70 @@ const OAuthCallback: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
-    const handleCallback = async () => {
+const handleCallback = async () => {
+  try {
+    // Check if we have success/error parameters from backend redirect
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const token = params.get('token');
+    const error = params.get('error');
+    const message = params.get('message');
+
+    // Handle OAuth errors
+    if (error || success === 'false') {
+      const errorMessage =
+        error === 'access_denied'
+          ? 'You denied access to the application'
+          : message || error || 'Authentication failed';
+      setError(errorMessage);
+      setIsProcessing(false);
+      return;
+    }
+
+    // Handle successful authentication
+    if (success === 'true' && token) {
       try {
-        // Check if we have success/error parameters from backend redirect
-        const success = searchParams.get('success');
-        const token = searchParams.get('token');
-        const error = searchParams.get('error');
-        const message = searchParams.get('message');
+        // Decode the token to get user info (for display purposes)
+        // In a real app, you'd get user info from a separate API call
+        const userData = {
+          id: 'temp-id',
+          providerId: 'temp-provider-id',
+          provider: 'google' as const,
+          username: 'user',
+          displayName: 'User',
+          createdAt: '',
+          updatedAt: ''
+        };
 
-        // Handle OAuth errors
-        if (error || success === 'false') {
-          const errorMessage = error === 'access_denied' 
-            ? 'You denied access to the application' 
-            : message || error || 'Authentication failed';
-          setError(errorMessage);
-          setIsProcessing(false);
-          return;
-        }
+        // Store authentication data using context
+        login(token, userData);
 
-        // Handle successful authentication
-        if (success === 'true' && token) {
-          try {
-            // Decode the token to get user info (for display purposes)
-            // In a real app, you'd get user info from a separate API call
-            const userData = {
-              id: 'temp-id',
-              providerId: 'temp-provider-id',
-              provider: 'google' as const,
-              username: 'user',
-              displayName: 'User',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-
-            // Store authentication data using context
-            login(token, userData);
-
-            // Navigate to dashboard
-            navigate('/dashboard', { replace: true });
-            return;
-          } catch (tokenError) {
-            console.error('Token processing error:', tokenError);
-            setError('Failed to process authentication token');
-            setIsProcessing(false);
-            return;
-          }
-        }
-
-        // If we don't have the expected parameters, this might be a direct callback
-        // In this case, we should redirect to the login page
-        setError('Invalid callback parameters');
+        // Redirect to dashboard with vanilla JS
+        window.location.replace('/dashboard');
+        return;
+      } catch (tokenError) {
+        console.error('Token processing error:', tokenError);
+        setError('Failed to process authentication token');
         setIsProcessing(false);
-
-      } catch (err) {
-        console.error('OAuth callback error:', err);
-        setError(err instanceof Error ? err.message : 'Authentication failed');
-        setIsProcessing(false);
+        return;
       }
-    };
+    }
+
+    // If we don't have the expected parameters, this might be a direct callback
+    // In this case, we should redirect to the login page
+    setError('Invalid callback parameters');
+    setIsProcessing(false);
+
+  } catch (err) {
+    console.error('OAuth callback error:', err);
+    setError(err instanceof Error ? err.message : 'Authentication failed');
+    setIsProcessing(false);
+  }
+};
+
 
     handleCallback();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate,login]);
 
   const handleRetry = () => {
     navigate('/login', { replace: true });

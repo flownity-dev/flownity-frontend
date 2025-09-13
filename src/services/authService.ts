@@ -66,7 +66,8 @@ const generateOAuthUrl = (provider: 'github' | 'google'): string => {
 
 // GitHub OAuth functions
 export const initiateGitHubAuth = (): void => {
-    window.location.href = generateOAuthUrl('github');
+    // window.location.href = generateOAuthUrl('github');
+    // authApi.gfe
 };
 
 // Google OAuth functions  
