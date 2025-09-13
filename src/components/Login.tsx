@@ -33,46 +33,51 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-const handleGitHubLogin = () => {
-  const authWindow = window.open(
-    `${import.meta.env.VITE_BACKEND_URL}/auth/github`,
-    "githubLogin",
-    "width=600,height=700"
-  );
+  const handleGitHubLogin = () => {
+    const authWindow = window.open(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/github`,
+      "githubLogin",
+      "width=600,height=700"
+    );
 
-  const allowedOrigins = [import.meta.env.VITE_BACKEND_URL]; // adjust if needed
+    const allowedOrigins = [import.meta.env.VITE_BACKEND_URL]; // adjust if needed
 
-  const handleMessage = (event: MessageEvent) => {
-    // Only accept messages from allowed origins
-    if (!allowedOrigins.includes(event.origin)) return;
+    const handleMessage = (event: MessageEvent) => {
+      // Only accept messages from allowed origins
+      if (!allowedOrigins.includes(event.origin)) return;
 
-    if (event.data?.type === "oauth_success") {
-      const { token, user } = event.data;
-      console.log("✅ Received token:", token);
-      console.log("User info:", user);
+      if (event.data?.type === "oauth_success") {
+        const { token } = event.data;
+        console.log("Received token:", token);
 
-      login(token, user);
-      window.location.href = "/dashboard";
+        // Save token in localStorage before redirect
+        localStorage.setItem("authToken", token);
 
-      // Close the popup after success
-      authWindow?.close();
-      window.removeEventListener("message", handleMessage);
-    }
+        // Close the popup after success
+        authWindow?.close();
 
-    if (event.data?.type === "oauth_error") {
-      console.error("❌ OAuth error:", event.data.message);
-      setError(event.data.message || "Authentication failed");
-      setIsAuthenticating(null);
+        // Redirect to dashboard
+        window.location.href = "/dashboard";
 
-      // Close the popup after error
-      authWindow?.close();
-      window.removeEventListener("message", handleMessage);
-    }
+        // Cleanup listener
+        window.removeEventListener("message", handleMessage);
+      }
+
+      if (event.data?.type === "oauth_error") {
+        console.error("OAuth error:", event.data.message);
+        setError(event.data.message || "Authentication failed");
+        setIsAuthenticating(null);
+
+        // Close the popup after error
+        authWindow?.close();
+        window.removeEventListener("message", handleMessage);
+      }
+    };
+
+
+    // Add listener **once**, outside of any immediate removal
+    window.addEventListener("message", handleMessage);
   };
-
-  // Add listener **once**, outside of any immediate removal
-  window.addEventListener("message", handleMessage);
-};
 
 
   const handleGoogleLogin = () => {
