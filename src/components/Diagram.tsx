@@ -127,16 +127,29 @@ const getLayoutedNodes = (
   });
 };
 
-// API fetch
 const fetchUsers = async (): Promise<User[]> => {
-  const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/projects/project-flow/5`, {
-    headers: {
-      Authorization: `Bearer ${import.meta.env.VITE_API_BEARER_TOKEN}`,
-    },
-  });
+  const authToken = localStorage.getItem("authToken");
+  if (!authToken) {
+    throw new Error("No auth token found in localStorage");
+  }
+
+  // Get projectId from path (last segment of the URL)
+  const pathParts = window.location.pathname.split("/");
+  const projectId = pathParts[pathParts.length - 1];
+
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/v1/projects/project-flow/${projectId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    }
+  );
+
   const json = await res.json();
   return json.data;
 };
+
 
 const FlowWithDialog: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -206,7 +219,7 @@ const FlowWithDialog: React.FC = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodeClick={(_: any, node: any) => {
+          onNodeClick={(_, node) => {
             const user = users.find((u) => u.id === node.id);
             if (user) setSelectedUser(user);
           }}
@@ -236,7 +249,7 @@ const FlowWithDialog: React.FC = () => {
               labelId="layout-select-label"
               value={layoutDirection}
               label="Layout"
-              onChange={(e: any) =>
+              onChange={(e) =>
                 setLayoutDirection(e.target.value as "TB" | "LR" | "BT" | "RL")
               }
             >
