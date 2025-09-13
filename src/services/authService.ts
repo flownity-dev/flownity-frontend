@@ -20,7 +20,7 @@ export interface TokenVerifyResponse {
 
 // Configure axios instance with base URL and headers
 const authApi = axios.create({
-    baseURL: 'http://localhost:3000',
+    baseURL: `${import.meta.env.VITE_BACKEND_URL}`,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -60,7 +60,7 @@ authApi.interceptors.response.use(
 
 // Generate OAuth URLs - let backend handle the callback
 const generateOAuthUrl = (provider: 'github' | 'google'): string => {
-    const baseUrl = 'http://localhost:3000/auth';
+    const baseUrl = `${import.meta.env.VITE_BACKEND_URL}`+'/auth';
     return `${baseUrl}/${provider}`;
 };
 

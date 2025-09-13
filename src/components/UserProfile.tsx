@@ -21,7 +21,7 @@ interface UserProfileProps {
 const UserProfile: React.FC<UserProfileProps> = ({
   variant = 'full',
   showProvider = true,
-  showLogoutButton = false // eslint-disable-line @typescript-eslint/no-unused-vars
+  //showLogoutButton = false // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
   const { user, isAuthenticated } = useAuth();
 
