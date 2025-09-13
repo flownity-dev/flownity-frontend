@@ -14,7 +14,7 @@ import {
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 import { GitHub, Google } from '@mui/icons-material';
 import {
-  initiateGitHubAuth,
+  //initiateGitHubAuth,
   initiateGoogleAuth
 } from '../services/authService';
 import { useAuth } from '../contexts/AuthContext';
