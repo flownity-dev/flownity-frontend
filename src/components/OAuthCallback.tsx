@@ -14,10 +14,11 @@ const OAuthCallback: React.FC = () => {
     const handleCallback = async () => {
       try {
         // Check if we have success/error parameters from backend redirect
-        const success = searchParams.get('success');
-        const token = searchParams.get('token');
-        const error = searchParams.get('error');
-        const message = searchParams.get('message');
+      const params = new URLSearchParams(window.location.search);
+      const success = params.get('success');
+      const token = params.get('token');
+      const error = params.get('error');
+      const message = params.get('message');
 
         // Handle OAuth errors
         if (error || success === 'false') {
@@ -40,8 +41,8 @@ const OAuthCallback: React.FC = () => {
               provider: 'google' as const,
               username: 'user',
               displayName: 'User',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
+              createdAt: '',
+              updatedAt: ''
             };
 
             // Store authentication data using context
@@ -71,7 +72,7 @@ const OAuthCallback: React.FC = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate,login]);
 
   const handleRetry = () => {
     navigate('/login', { replace: true });
