@@ -26,7 +26,7 @@ export interface ApiTaskGroup {
 export const transformApiTaskGroup = (apiTaskGroup: ApiTaskGroup): TaskGroup => {
     // Use status field for workflow status mapping
     const workflowStatus = mapToTaskGroupStatus(apiTaskGroup.status);
-    
+
     return {
         id: apiTaskGroup.id.toString(),
         name: apiTaskGroup.task_group_title,
@@ -59,7 +59,12 @@ export interface TaskGroupPaginationParams {
 // GET /api/v1/task-groups - Get all task groups for authenticated user
 export const getAllTaskGroups = async (params?: TaskGroupPaginationParams): Promise<TaskGroup[]> => {
     try {
-        // Build query parameters
+        // Use dedicated endpoint for archived task groups
+        if (params?.filter === 'archived') {
+            return await getTrashedTaskGroups();
+        }
+
+        // Build query parameters for active task groups
         const queryParams = new URLSearchParams();
 
         if (params?.page) {
@@ -67,9 +72,6 @@ export const getAllTaskGroups = async (params?: TaskGroupPaginationParams): Prom
         }
         if (params?.limit) {
             queryParams.append('limit', params.limit.toString());
-        }
-        if (params?.filter) {
-            queryParams.append('filter', params.filter);
         }
 
         const url = queryParams.toString()
@@ -81,18 +83,7 @@ export const getAllTaskGroups = async (params?: TaskGroupPaginationParams): Prom
         if (Array.isArray(response.data)) {
             // Direct array response
             const apiTaskGroups: ApiTaskGroup[] = response.data;
-            
-            // Filter based on deleted_at field and filter parameter
-            let filteredTaskGroups = apiTaskGroups;
-            if (params?.filter === 'archived') {
-                // Show only archived items (deleted_at is not null)
-                filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at !== null);
-            } else {
-                // Show only active items (deleted_at is null) - this is the default for 'all'
-                filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at === null);
-            }
-            
-            return filteredTaskGroups.map(transformApiTaskGroup);
+            return apiTaskGroups.map(transformApiTaskGroup);
         }
 
         // Handle nested response structure
@@ -104,69 +95,25 @@ export const getAllTaskGroups = async (params?: TaskGroupPaginationParams): Prom
                 // Check if task groups are nested under a 'taskGroups' key (based on actual API response)
                 if (taskGroupsData.taskGroups && Array.isArray(taskGroupsData.taskGroups)) {
                     const apiTaskGroups: ApiTaskGroup[] = taskGroupsData.taskGroups;
-                    
-                    // Filter based on deleted_at field and filter parameter
-                    let filteredTaskGroups = apiTaskGroups;
-                    if (params?.filter === 'archived') {
-                        // Show only archived items (deleted_at is not null)
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at !== null);
-                    } else {
-                        // Show only active items (deleted_at is null) - this is the default for 'all'
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at === null);
-                    }
-                    
-                    return filteredTaskGroups.map(transformApiTaskGroup);
+                    return apiTaskGroups.map(transformApiTaskGroup);
                 }
 
                 // Check if task groups are nested under a 'task_groups' key
                 if (taskGroupsData.task_groups && Array.isArray(taskGroupsData.task_groups)) {
                     const apiTaskGroups: ApiTaskGroup[] = taskGroupsData.task_groups;
-                    
-                    // Filter based on deleted_at field and filter parameter
-                    let filteredTaskGroups = apiTaskGroups;
-                    if (params?.filter === 'archived') {
-                        // Show only archived items (deleted_at is not null)
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at !== null);
-                    } else {
-                        // Show only active items (deleted_at is null) - this is the default for 'all'
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at === null);
-                    }
-                    
-                    return filteredTaskGroups.map(transformApiTaskGroup);
+                    return apiTaskGroups.map(transformApiTaskGroup);
                 }
 
                 if (Array.isArray(taskGroupsData)) {
                     const apiTaskGroups: ApiTaskGroup[] = taskGroupsData;
-                    
-                    // Filter based on deleted_at field and filter parameter
-                    let filteredTaskGroups = apiTaskGroups;
-                    if (params?.filter === 'archived') {
-                        // Show only archived items (deleted_at is not null)
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at !== null);
-                    } else {
-                        // Show only active items (deleted_at is null) - this is the default for 'all'
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at === null);
-                    }
-                    
-                    return filteredTaskGroups.map(transformApiTaskGroup);
+                    return apiTaskGroups.map(transformApiTaskGroup);
                 }
             }
 
             // Fallback: check if response.data has a 'data' property that's an array
             if ('data' in response.data && Array.isArray(response.data.data)) {
                 const apiTaskGroups: ApiTaskGroup[] = response.data.data;
-                
-                // Filter based on deleted_at field and filter parameter
-                let filteredTaskGroups = apiTaskGroups;
-                if (params?.filter === 'archived') {
-                    // Show only archived items (deleted_at is not null)
-                    filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at !== null);
-                } else {
-                    // Show only active items (deleted_at is null) - this is the default for 'all'
-                    filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at === null);
-                }
-                
-                return filteredTaskGroups.map(transformApiTaskGroup);
+                return apiTaskGroups.map(transformApiTaskGroup);
             }
 
             // Check for common property names that might contain the task groups array
@@ -174,18 +121,7 @@ export const getAllTaskGroups = async (params?: TaskGroupPaginationParams): Prom
             for (const key of possibleArrayKeys) {
                 if (key in response.data && Array.isArray(response.data[key])) {
                     const apiTaskGroups: ApiTaskGroup[] = response.data[key];
-                    
-                    // Filter based on deleted_at field and filter parameter
-                    let filteredTaskGroups = apiTaskGroups;
-                    if (params?.filter === 'archived') {
-                        // Show only archived items (deleted_at is not null)
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at !== null);
-                    } else {
-                        // Show only active items (deleted_at is null) - this is the default for 'all'
-                        filteredTaskGroups = apiTaskGroups.filter(taskGroup => taskGroup.deleted_at === null);
-                    }
-                    
-                    return filteredTaskGroups.map(transformApiTaskGroup);
+                    return apiTaskGroups.map(transformApiTaskGroup);
                 }
             }
 

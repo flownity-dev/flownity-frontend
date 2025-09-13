@@ -73,6 +73,21 @@ export interface PaginatedResponse<T> {
 export const getAllProjects = async (
 	params?: PaginationParams
 ): Promise<PaginatedResponse<Project>> => {
+	// Use dedicated endpoint for archived projects
+	if (params?.filter === 'archived') {
+		try {
+			const trashedProjects = await getTrashedProjects();
+			return {
+				data: trashedProjects,
+				totalPages: 1,
+				currentPage: 1,
+				totalItems: trashedProjects.length,
+			};
+		} catch (error) {
+			throw error;
+		}
+	}
+
 	const queryParams = new URLSearchParams();
 
 	if (params?.page) {
@@ -80,9 +95,6 @@ export const getAllProjects = async (
 	}
 	if (params?.limit) {
 		queryParams.append("limit", params.limit.toString());
-	}
-	if (params?.filter) {
-		queryParams.append("filter", params.filter);
 	}
 
 	const url = queryParams.toString()
@@ -96,18 +108,7 @@ export const getAllProjects = async (
 		if (Array.isArray(response.data)) {
 			// Non-paginated response - wrap in pagination structure
 			const apiProjects = response.data as ApiProject[];
-
-			// Filter based on deleted_at field and filter parameter
-			let filteredProjects = apiProjects;
-			if (params?.filter === 'archived') {
-				// Show only archived items (deleted_at is not null)
-				filteredProjects = apiProjects.filter(project => project.deleted_at !== null);
-			} else {
-				// Show only active items (deleted_at is null) - this is the default for 'all'
-				filteredProjects = apiProjects.filter(project => project.deleted_at === null);
-			}
-
-			const transformedProjects = filteredProjects.map(transformApiProject);
+			const transformedProjects = apiProjects.map(transformApiProject);
 
 			return {
 				data: transformedProjects,
@@ -127,18 +128,7 @@ export const getAllProjects = async (
 				Array.isArray(response.data.data.projects)
 			) {
 				const apiProjects = response.data.data.projects as ApiProject[];
-
-				// Filter based on deleted_at field and filter parameter
-				let filteredProjects = apiProjects;
-				if (params?.filter === 'archived') {
-					// Show only archived items (deleted_at is not null)
-					filteredProjects = apiProjects.filter(project => project.deleted_at !== null);
-				} else {
-					// Show only active items (deleted_at is null) - this is the default for 'all'
-					filteredProjects = apiProjects.filter(project => project.deleted_at === null);
-				}
-
-				const transformedProjects = filteredProjects.map(transformApiProject);
+				const transformedProjects = apiProjects.map(transformApiProject);
 				const pagination = response.data.pagination || {};
 
 				return {
@@ -157,18 +147,7 @@ export const getAllProjects = async (
 				Array.isArray(response.data.data.projects)
 			) {
 				const apiProjects = response.data.data.projects as ApiProject[];
-
-				// Filter based on deleted_at field and filter parameter
-				let filteredProjects = apiProjects;
-				if (params?.filter === 'archived') {
-					// Show only archived items (deleted_at is not null)
-					filteredProjects = apiProjects.filter(project => project.deleted_at !== null);
-				} else {
-					// Show only active items (deleted_at is null) - this is the default for 'all'
-					filteredProjects = apiProjects.filter(project => project.deleted_at === null);
-				}
-
-				const transformedProjects = filteredProjects.map(transformApiProject);
+				const transformedProjects = apiProjects.map(transformApiProject);
 				const pagination = response.data.pagination || {};
 
 				return {
@@ -182,18 +161,7 @@ export const getAllProjects = async (
 			// Legacy fallback: check if response.data has a 'data' property that's an array
 			if ("data" in response.data && Array.isArray(response.data.data)) {
 				const apiProjects = response.data.data as ApiProject[];
-
-				// Filter based on deleted_at field and filter parameter
-				let filteredProjects = apiProjects;
-				if (params?.filter === 'archived') {
-					// Show only archived items (deleted_at is not null)
-					filteredProjects = apiProjects.filter(project => project.deleted_at !== null);
-				} else {
-					// Show only active items (deleted_at is null) - this is the default for 'all'
-					filteredProjects = apiProjects.filter(project => project.deleted_at === null);
-				}
-
-				const transformedProjects = filteredProjects.map(transformApiProject);
+				const transformedProjects = apiProjects.map(transformApiProject);
 
 				return {
 					data: transformedProjects,
@@ -208,18 +176,7 @@ export const getAllProjects = async (
 			for (const key of possibleArrayKeys) {
 				if (key in response.data && Array.isArray(response.data[key])) {
 					const apiProjects = response.data[key] as ApiProject[];
-
-					// Filter based on deleted_at field and filter parameter
-					let filteredProjects = apiProjects;
-					if (params?.filter === 'archived') {
-						// Show only archived items (deleted_at is not null)
-						filteredProjects = apiProjects.filter(project => project.deleted_at !== null);
-					} else {
-						// Show only active items (deleted_at is null) - this is the default for 'all'
-						filteredProjects = apiProjects.filter(project => project.deleted_at === null);
-					}
-
-					const transformedProjects = filteredProjects.map(transformApiProject);
+					const transformedProjects = apiProjects.map(transformApiProject);
 
 					return {
 						data: transformedProjects,
@@ -283,8 +240,78 @@ export const getAllProjects = async (
 
 // GET /api/v1/projects/trash - Get all soft deleted projects
 export const getTrashedProjects = async (): Promise<Project[]> => {
-	const response = await httpClient.get("/projects/trash");
-	return response.data;
+	try {
+		const response = await httpClient.get("/projects/trash");
+
+		// Handle different possible response formats
+		if (Array.isArray(response.data)) {
+			// Direct array response
+			const apiProjects: ApiProject[] = response.data;
+			return apiProjects.map(transformApiProject);
+		}
+
+		// Handle nested response structure
+		if (response.data && typeof response.data === 'object') {
+			// Check for success response with data
+			if (response.data.success && response.data.data) {
+				const projectsData = response.data.data;
+
+				// Check if projects are nested under a 'projects' key
+				if (projectsData.projects && Array.isArray(projectsData.projects)) {
+					const apiProjects: ApiProject[] = projectsData.projects;
+					return apiProjects.map(transformApiProject);
+				}
+
+				if (Array.isArray(projectsData)) {
+					const apiProjects: ApiProject[] = projectsData;
+					return apiProjects.map(transformApiProject);
+				}
+			}
+
+			// Fallback: check if response.data has a 'data' property that's an array
+			if ('data' in response.data && Array.isArray(response.data.data)) {
+				const apiProjects: ApiProject[] = response.data.data;
+				return apiProjects.map(transformApiProject);
+			}
+
+			// Check for common property names that might contain the projects array
+			const possibleArrayKeys = ['projects', 'items', 'results'];
+			for (const key of possibleArrayKeys) {
+				if (key in response.data && Array.isArray(response.data[key])) {
+					const apiProjects: ApiProject[] = response.data[key];
+					return apiProjects.map(transformApiProject);
+				}
+			}
+
+			console.error('Could not find projects array in trashed projects response:', response.data);
+			return [];
+		}
+
+		console.error('Unexpected response format from trashed projects:', response.data);
+		throw new Error('Invalid response format from server');
+	} catch (error) {
+		if (error && typeof error === 'object' && 'response' in error) {
+			const httpError = error as { response?: { status?: number; data?: { message?: string } } };
+			const status = httpError.response?.status;
+
+			if (status === 404) {
+				throw new Error('Trashed projects endpoint not found');
+			} else if (status && status >= 500) {
+				throw new Error('Server error occurred while fetching trashed projects');
+			} else if (httpError.response?.data?.message) {
+				throw new Error(httpError.response.data.message);
+			}
+		}
+
+		if (error instanceof Error) {
+			if (error.message.includes('Network Error') || error.message.includes('timeout')) {
+				throw new Error('Network error: Please check your connection and try again');
+			}
+			throw error;
+		}
+
+		throw new Error('An unexpected error occurred while fetching trashed projects');
+	}
 };
 
 // Transform API project response to ProjectDetailData
