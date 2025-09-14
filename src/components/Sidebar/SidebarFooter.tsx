@@ -48,6 +48,18 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ userProfile, isCollapsed 
         handleCloseUserMenu();
         // Handle menu item actions here
         console.log(`Menu item clicked: ${itemId}`);
+
+        if (itemId === 'logout') {
+            // Remove authToken from localStorage
+            localStorage.removeItem('authToken');
+
+            // Optionally, redirect to login page
+            window.location.href = '/login';
+
+            console.log('Logging out...');
+        }
+
+
     };
 
     return (
