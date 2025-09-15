@@ -45,10 +45,6 @@ const Login: React.FC = () => {
 
 			if (event.data?.type === "oauth_success") {
 				const { token } = event.data;
-				console.log("Received token:", token);
-
-				// // Save token in localStorage before redirect
-				// localStorage.setItem("authToken", token);
 
 				// Close the popup after success
 				authWindow?.close();

@@ -15,8 +15,11 @@ import {
 	Stack,
 	Box,
 	useTheme,
+	ListItemIcon,
+	useMediaQuery,
 } from "@mui/material";
 import { FolderOpen as FolderOpenIcon } from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
 import type {
 	ProjectsTableProps,
@@ -24,6 +27,8 @@ import type {
 	Project,
 } from "../../types/common.types";
 import { LoadingState, EmptyState, ErrorState } from "../Common";
+import DialogComponent from "../Common/DialogComponent";
+import { deleteProject } from "../../services/projectService";
 
 const ProjectsTable: React.FC<ProjectsTableProps> = ({
 	projects = [],
@@ -35,6 +40,15 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
 }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
+	const prefersReducedMotion = useMediaQuery(
+		"(prefers-reduced-motion: reduce)"
+	);
+
+	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+	const [selectedProject, setSelectedProject] = React.useState<Project | null>(
+		null
+	);
+	const [deleting, setDeleting] = React.useState(false);
 
 	/**
 	 * Handle project click to navigate to detail view
@@ -155,6 +169,31 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
 		</Card>
 	);
 
+	const handleDeleteClick = (project: Project) => {
+		setSelectedProject(project);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!selectedProject) return;
+		setDeleting(true);
+		try {
+			await deleteProject(selectedProject.id);
+			setDeleteDialogOpen(false);
+			setSelectedProject(null);
+			if (onRetry) onRetry(); // Refresh list if possible
+		} catch (err) {
+			// Optionally handle error (e.g., show notification)
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	const handleDeleteCancel = () => {
+		setDeleteDialogOpen(false);
+		setSelectedProject(null);
+	};
+
 	// Handle loading state
 	if (loading) {
 		return (
@@ -204,102 +243,144 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
 
 	// Desktop/tablet table layout
 	return (
-		<TableContainer
-			component={Paper}
-			sx={{
-				boxShadow: 1,
-				borderRadius: 1,
-				overflowX: "auto",
-			}}
-		>
-			<Table
+		<React.Fragment>
+			<TableContainer
+				component={Paper}
 				sx={{
-					minWidth: isTablet ? 500 : 650,
+					boxShadow: 1,
+					borderRadius: 1,
 				}}
-				aria-label="projects table"
 			>
-				<TableHead>
-					<TableRow>
-						<TableCell sx={{ fontWeight: 600 }}>Project Name</TableCell>
-						{!isTablet && (
-							<TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
-						)}
-						<TableCell sx={{ fontWeight: 600 }}>
-							{isTablet ? "Dates" : "End Date"}
-						</TableCell>
-						<TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-					</TableRow>
-				</TableHead>
-				<TableBody>
-					{projects.map((project) => (
-						<TableRow
-							key={project.id}
-							onClick={() => handleProjectClick(project.id)}
-							sx={{
-								cursor: "pointer",
-								"&:last-child td, &:last-child th": { border: 0 },
-								"&:hover": {
-									backgroundColor: "action.hover",
-								},
-								transition: theme.transitions.create(["background-color"], {
-									duration: theme.transitions.duration.short,
-								}),
-							}}
-						>
-							<TableCell component="th" scope="row">
-								<Typography variant="body2" fontWeight={500}>
-									{project.name}
-								</Typography>
-							</TableCell>
+				<Table
+					sx={{
+						minWidth: isTablet ? 500 : 650,
+					}}
+					aria-label="projects table"
+				>
+					<TableHead>
+						<TableRow>
+							<TableCell sx={{ fontWeight: 600 }}>Project Name</TableCell>
 							{!isTablet && (
-								<TableCell>
-									<Typography variant="body2" color="text.secondary">
-										{project.startDate && formatDate(project.startDate)}
+								<TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
+							)}
+							<TableCell sx={{ fontWeight: 600 }}>
+								{isTablet ? "Dates" : "End Date"}
+							</TableCell>
+							<TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+							<TableCell></TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{projects.map((project) => (
+							<TableRow
+								key={project.id}
+								onClick={() => handleProjectClick(project.id)}
+								sx={{
+									cursor: "pointer",
+									"&:last-child td, &:last-child th": { border: 0 },
+									"&:hover": {
+										backgroundColor: "action.hover",
+									},
+									transition: theme.transitions.create(["background-color"], {
+										duration: theme.transitions.duration.short,
+									}),
+								}}
+							>
+								<TableCell component="th" scope="row">
+									<Typography variant="body2" fontWeight={500}>
+										{project.name}
 									</Typography>
 								</TableCell>
-							)}
-							<TableCell>
-								{isTablet ? (
-									<Stack spacing={0.5}>
-										<Typography
-											variant="body2"
-											color="text.secondary"
-											fontSize="0.75rem"
-										>
-											Start:{" "}
+								{!isTablet && (
+									<TableCell>
+										<Typography variant="body2" color="text.secondary">
 											{project.startDate && formatDate(project.startDate)}
 										</Typography>
-										<Typography
-											variant="body2"
-											color="text.secondary"
-											fontSize="0.75rem"
-										>
-											End: {project.endDate && formatDate(project.endDate)}
-										</Typography>
-									</Stack>
-								) : (
-									<Typography variant="body2" color="text.secondary">
-										{project.endDate && formatDate(project.endDate)}
-									</Typography>
+									</TableCell>
 								)}
-							</TableCell>
-							<TableCell>
-								<Chip
-									label={getStatusLabel(project.status)}
-									color={getStatusColor(project.status)}
-									size="small"
-									sx={{
-										fontWeight: 500,
-										minWidth: isTablet ? 70 : 80,
-										fontSize: isTablet ? "0.7rem" : "0.75rem",
-									}}
-								/>
-							</TableCell>
-						</TableRow>
-					))}
-				</TableBody>
-			</Table>
-		</TableContainer>
+								<TableCell>
+									{isTablet ? (
+										<Stack spacing={0.5}>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+												fontSize="0.75rem"
+											>
+												Start:{" "}
+												{project.startDate && formatDate(project.startDate)}
+											</Typography>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+												fontSize="0.75rem"
+											>
+												End: {project.endDate && formatDate(project.endDate)}
+											</Typography>
+										</Stack>
+									) : (
+										<Typography variant="body2" color="text.secondary">
+											{project.endDate && formatDate(project.endDate)}
+										</Typography>
+									)}
+								</TableCell>
+								<TableCell>
+									<Chip
+										label={getStatusLabel(project.status)}
+										color={getStatusColor(project.status)}
+										size="small"
+										sx={{
+											fontWeight: 500,
+											minWidth: isTablet ? 70 : 80,
+											fontSize: isTablet ? "0.7rem" : "0.75rem",
+										}}
+									/>
+								</TableCell>
+								<TableCell>
+									<ListItemIcon
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteClick(project);
+										}}
+										sx={{
+											minWidth: isMobile ? 56 : 0,
+											justifyContent: "center",
+											color: "#e54141",
+											"& .MuiSvgIcon-root": {
+												fontSize: isMobile ? "1.5rem" : "1.25rem",
+											},
+											transition: prefersReducedMotion
+												? "none"
+												: theme.transitions.create(["transform"], {
+														duration: theme.transitions.duration.shorter,
+														easing: theme.transitions.easing.easeInOut,
+													}),
+											...(!isMobile && {
+												"&:hover": {
+													transform: prefersReducedMotion
+														? "none"
+														: "translateX(2px)",
+												},
+											}),
+										}}
+									>
+										<DeleteIcon />
+									</ListItemIcon>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</TableContainer>
+			<DialogComponent
+				open={deleteDialogOpen}
+				title="Delete Project"
+				message={`Are you sure you want to delete the project '${selectedProject?.name}'? This action cannot be undone.`}
+				onConfirm={handleDeleteConfirm}
+				onClose={handleDeleteCancel}
+				confirmText={deleting ? "Deleting..." : "Confirm"}
+				cancelText="Cancel"
+			/>
+		</React.Fragment>
 	);
 };
 

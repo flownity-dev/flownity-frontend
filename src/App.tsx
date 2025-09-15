@@ -54,8 +54,9 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 						easing: theme.transitions.easing.sharp,
 						duration: theme.transitions.duration.enteringScreen,
 					}),
-					minHeight: "100vh",
+					maxHeight: "100vh",
 					width: getMainContentWidth(),
+					overflowY: "auto",
 					// Prevent content from being selectable when mobile sidebar is open
 					...(isMobile &&
 						!isCollapsed && {
